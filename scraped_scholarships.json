@@ -1,0 +1,85 @@
+[
+  {
+    "scholarships": [],
+    "source_url": "https://www.adelaide.edu.au/scholarships/"
+  },
+  {
+    "error": "Unable to fetch external content",
+    "message": "I cannot directly access or fetch content from external URLs, including https://www.dfat.gov.au/people-to-people/australia-awards. The search results provided do not contain information about Australian scholarships for international students. To complete this request, please provide the page content directly or use a web scraping tool to retrieve the scholarship data from the specified URL.",
+    "source_url": "https://www.dfat.gov.au/people-to-people/australia-awards"
+  },
+  {
+    "error": "Unable to complete request",
+    "reason": "Search results do not contain scholarship data for Australia",
+    "details": "The provided search results contain only technical documentation about JSON Schema (a data validation standard), not information about Australian scholarships for international students. The query requests extraction of scholarship data from a specific Australian government education webpage, but no such content was included in the search results provided.",
+    "source_url": "https://www.education.gov.au/international-education/financial-assistance-international-students"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.flinders.edu.au/international/fees-scholarships/scholarships"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.mq.edu.au/study/find-a-scholarship/international"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.mq.edu.au/study/scholarships/find-a-scholarship/international"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.newcastle.edu.au/study/scholarships/international"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.scholardigger.com/search/NSW"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.scu.edu.au/study-at-scu/scholarships/international-scholarships/"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.study.nsw.gov.au/current-students/nsw-international-student-ambassadors-program"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.study.nsw.gov.au/future-student/scholarships"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.studyaustralia.gov.au/en/plan-your-studies/scholarships"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.sydney.edu.au/scholarships/international.html"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.tafensw.edu.au/international/apply/scholarships"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.une.edu.au/study/scholarships/international"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.unsw.edu.au/study/how-to-apply/scholarships"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.unsw.edu.au/study/your-future/international-scholarships"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.uts.edu.au/study/international/scholarships"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.uts.edu.au/study/student-services/fees-scholarships/scholarships/uts-scholarships/international"
+  },
+  {
+    "scholarships": [],
+    "source_url": "https://www.westernsydney.edu.au/scholarships/international"
+  }
+]

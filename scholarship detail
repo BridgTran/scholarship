@@ -1,0 +1,1 @@
+from scholarship_detail import bp_detail, get_scholarship_detail, create_scholarship

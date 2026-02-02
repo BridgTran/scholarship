@@ -1,0 +1,1168 @@
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scholarship Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gradient-to-b from-gray-50 to-white text-gray-900 antialiased">
+    
+<div class="relative min-h-screen overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+  <!-- Subtle gradient background -->
+  <div class="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/30"></div>
+  
+  <!-- Geometric background elements -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-blue-100/40 blur-3xl"></div>
+    <div class="absolute top-60 -left-20 h-72 w-72 rounded-full bg-purple-100/40 blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-cyan-100/30 blur-3xl"></div>
+  </div>
+
+  <div class="relative">
+    <!-- Modern header with glass effect -->
+    <header class="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-xl">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+          <div class="flex items-center">
+            <div class="flex items-center space-x-3">
+              <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500">
+                <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </div>
+              <span class="text-lg font-semibold text-gray-900">Scholarship Atlas</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="hidden text-sm text-gray-600 md:inline">Find your perfect match</span>
+            <a href="/scholarship_search" class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md">
+              Explore Scholarships
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+      <!-- Hero section -->
+      <div class="mb-12 text-center">
+        <div class="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-blue-700 ring-1 ring-inset ring-blue-100">
+          Premium Scholarship Platform
+        </div>
+        <h1 class="mt-6 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+          Discover Your<br class="hidden sm:block" />
+          <span class="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Funding Future</span>
+        </h1>
+        <p class="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+          Smart search, intelligent filters, and personalized recommendations to match you with perfect scholarships
+        </p>
+      </div>
+
+      <!-- Search card with glass effect -->
+      <div class="mb-16 rounded-2xl border border-gray-200/60 bg-white/80 p-8 shadow-xl backdrop-blur-sm lg:p-10">
+        <form id="searchForm" class="space-y-8">
+          <!-- Main search bar -->
+          <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <label for="search" class="mb-3 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+              What are you looking for?
+            </label>
+            <div class="flex flex-col gap-4 sm:flex-row">
+              <div class="relative flex-1">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  id="search"
+                  name="search"
+                  placeholder="Try 'engineering scholarships', 'graduate funding', or 'merit-based awards'"
+                  class="block w-full rounded-lg border-0 bg-gray-50 py-4 pl-12 pr-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm"
+                />
+              </div>
+              <button
+                type="submit"
+                class="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Find Scholarships
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick filters -->
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label for="amount" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Funding Amount
+              </label>
+              <select
+                id="amount"
+                name="amount"
+                class="block w-full rounded-lg border-gray-200 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Any amount</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="deadline" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Application Deadline
+              </label>
+              <select
+                id="deadline"
+                name="deadline"
+                class="block w-full rounded-lg border-gray-200 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Any deadline</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="level_of_study" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Study Level
+              </label>
+              <select
+                id="level_of_study"
+                name="level_of_study"
+                class="block w-full rounded-lg border-gray-200 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All levels</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="sort" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Sort By
+              </label>
+              <select
+                id="sort"
+                name="sort"
+                class="block w-full rounded-lg border-gray-200 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Sort By</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Additional options -->
+          <div class="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+            <label class="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="recently_closed"
+                name="recently_closed"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span class="text-sm font-medium text-gray-700">Include recently closed opportunities</span>
+            </label>
+            <span class="text-sm text-gray-500">Refine further with advanced filters if needed</span>
+          </div>
+
+          <!-- Advanced filters toggle -->
+          <div class="rounded-lg border border-gray-200 bg-white p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-900">Advanced Filters</h3>
+                <p class="mt-1 text-sm text-gray-500">Narrow your search with precise criteria</p>
+              </div>
+              <button
+                type="button"
+                id="toggleAdvanced"
+                class="inline-flex items-center rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+              >
+                <svg id="toggleIcon" class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                Show More
+              </button>
+            </div>
+
+            <!-- Advanced filters content -->
+            <div id="advancedFilters" class="mt-6 hidden space-y-6">
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div>
+                  <label for="organization_type" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Organization Type
+                  </label>
+                  <select
+                    id="organization_type"
+                    name="organization_type"
+                    class="block w-full rounded-lg border-gray-200 bg-white py-2.5 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All types</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label for="gender" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Gender Eligibility
+                  </label>
+                  <select
+                    id="gender"
+                    name="gender"
+                    class="block w-full rounded-lg border-gray-200 bg-white py-2.5 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Any gender</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label for="background_factors" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Background Factors
+                  </label>
+                  <select
+                    id="background_factors"
+                    name="background_factors"
+                    class="block w-full rounded-lg border-gray-200 bg-white py-2.5 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Any background</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- More advanced filters -->
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div>
+                  <label for="age_group" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Age Group
+                  </label>
+                  <select
+                    id="age_group"
+                    name="age_group"
+                    class="block w-full rounded-lg border-gray-200 bg-white py-2.5 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Any age</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label for="social_impact" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Social Impact Focus
+                  </label>
+                  <select
+                    id="social_impact"
+                    name="social_impact"
+                    class="block w-full rounded-lg border-gray-200 bg-white py-2.5 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Any focus</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label for="citizenship_status" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Citizenship Status
+                  </label>
+                  <select
+                    id="citizenship_status"
+                    name="citizenship_status"
+                    class="block w-full rounded-lg border-gray-200 bg-white py-2.5 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Any status</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Industry tags -->
+              <div>
+                <label class="mb-3 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Industry Focus
+                </label>
+                <div id="industry-options" class="flex flex-wrap gap-2">
+                  <!-- Will be populated by JavaScript -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active filters display -->
+          <div id="activeFilters" class="rounded-lg border border-dashed border-gray-300 bg-gray-50/50 p-4 text-center">
+            <p class="text-sm text-gray-500">
+              <span class="font-medium text-gray-700">No filters applied.</span> Start by entering a keyword or selecting quick filters above.
+            </p>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results section -->
+      <section class="space-y-8">
+        <!-- <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900">Scholarship Matches</h2>
+            <p class="mt-1 text-sm text-gray-600">Personalized results based on your criteria</p>
+          </div>
+          <div class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5">
+            <div class="h-2 w-2 rounded-full bg-blue-500"></div>
+            <span class="text-xs font-medium text-blue-700">Live updating</span>
+          </div>
+        </div> -->
+
+
+        <!-- Results container -->
+       <!-- Results container -->
+<div id="resultsContainer" class="space-y-8">
+  <!-- Loading state - Enhanced with hero matching style -->
+  <div id="loadingState" class="hidden rounded-2xl border border-gray-200/60 bg-white/90 p-16 text-center shadow-2xl backdrop-blur-sm">
+    <div class="inline-flex flex-col items-center">
+      <!-- Animated gradient spinner that matches hero gradient -->
+      <div class="relative h-20 w-20">
+        <div class="absolute inset-0 animate-spin rounded-full border-4 border-gray-200/40"></div>
+        <div class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-blue-600/80 border-r-cyan-500/80" style="animation-duration: 1.5s"></div>
+      </div>
+      <div class="mt-8">
+        <div class="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-blue-700 ring-1 ring-inset ring-blue-100">
+          <svg class="mr-2 h-4 w-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Intelligent Search
+        </div>
+        <h3 class="mt-6 text-2xl font-bold tracking-tight text-gray-900">Discovering Opportunities</h3>
+        <p class="mt-3 text-gray-600">Our AI is matching you with perfect scholarships</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error state - Sophisticated redesign -->
+  <div id="errorState" class="hidden rounded-2xl border border-gray-200/60 bg-white/90 p-12 text-center shadow-2xl backdrop-blur-sm">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-red-50 to-pink-50 ring-4 ring-red-50/50">
+      <svg class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+    <h3 class="mt-6 text-xl font-bold text-gray-900">Connection Issue</h3>
+    <p class="mt-3 text-gray-600">We're having trouble reaching our scholarship database</p>
+    <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
+      <button
+        id="retryButton"
+        class="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-6 py-3.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md"
+      >
+        <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Retry Search
+      </button>
+      <button
+        id="refreshButton"
+        class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      >
+        <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Refresh Page
+      </button>
+    </div>
+  </div>
+
+  <!-- Results header - Premium redesign -->
+  <div id="resultsHeader" class="hidden">
+    <div class="">
+      <div class="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+        <div class="space-y-2">
+          <div class="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-blue-700 ring-1 ring-inset ring-blue-100">
+            Premium Matches
+          </div>
+          <h2 class="text-xl font-bold tracking-tight text-gray-900">
+            Your <span class="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Personalized</span> Results
+          </h2>
+          <p id="resultsCount" class="text-gray-600">Curated specifically for your profile and preferences</p>
+        </div>
+        <div class="flex items-center gap-4">
+          
+          <select
+            id="sortSelect"
+            class="rounded-xl border-0 bg-white/60 py-3 pl-4 pr-10 text-sm text-gray-700 shadow-sm ring-1 ring-gray-200/40 focus:ring-2 focus:ring-blue-500"
+          >
+            <option>Best Match</option>
+            <option>Highest Amount</option>
+            <option>Soonest Deadline</option>
+            <option>Most Popular</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state - Premium redesign -->
+  <div id="emptyState" class="hidden rounded-2xl border border-gray-200/60 bg-white/90 p-16 text-center shadow-2xl backdrop-blur-sm">
+    <div class="mx-auto max-w-md">
+      <div class="inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-r from-gray-50 to-gray-100 ring-4 ring-gray-100/50">
+        <svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      </div>
+      <h3 class="mt-8 text-2xl font-bold text-gray-900">No matches yet</h3>
+      <p class="mt-3 text-gray-600">Try adjusting your search criteria or explore popular categories</p>
+      
+      <div class="mt-10 grid grid-cols-2 gap-3">
+        <button class="category-btn rounded-xl border border-gray-200/60 bg-white/60 p-4 text-left transition-all hover:bg-white hover:shadow-md">
+          <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">STEM</div>
+          <div class="mt-1 text-sm font-medium text-gray-900">Engineering & Science</div>
+        </button>
+        <button class="category-btn rounded-xl border border-gray-200/60 bg-white/60 p-4 text-left transition-all hover:bg-white hover:shadow-md">
+          <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Merit</div>
+          <div class="mt-1 text-sm font-medium text-gray-900">Academic Excellence</div>
+        </button>
+        <button class="category-btn rounded-xl border border-gray-200/60 bg-white/60 p-4 text-left transition-all hover:bg-white hover:shadow-md">
+          <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Graduate</div>
+          <div class="mt-1 text-sm font-medium text-gray-900">Postgraduate Studies</div>
+        </button>
+        <button class="category-btn rounded-xl border border-gray-200/60 bg-white/60 p-4 text-left transition-all hover:bg-white hover:shadow-md">
+          <div class="text-xs font-semibold uppercase tracking-wider text-gray-500">Need-Based</div>
+          <div class="mt-1 text-sm font-medium text-gray-900">Financial Support</div>
+        </button>
+      </div>
+      
+      <div class="mt-12 pt-8 border-t border-gray-200/40">
+        <button
+          id="clearFilters"
+          class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+        >
+          <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Reset All Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results list -->
+  <div id="resultsList" class="space-y-6"></div>
+</div>
+
+
+        
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- ADD YOUR JAVASCRIPT HERE -->
+<script>
+  // ---------- tiny safe DOM helpers ----------
+  const $ = (id) => document.getElementById(id);
+
+  function val(id) {
+    const el = $(id);
+    return el ? String(el.value ?? "").trim() : "";
+  }
+
+  function setVal(id, v) {
+    const el = $(id);
+    if (el) el.value = v ?? "";
+  }
+
+  function checked(id) {
+    const el = $(id);
+    return el ? !!el.checked : false;
+  }
+
+  function setChecked(id, v) {
+    const el = $(id);
+    if (el) el.checked = !!v;
+  }
+
+  function on(el, event, handler) {
+    if (el) el.addEventListener(event, handler);
+  }
+
+  // ---------- element refs ----------
+  const searchForm = $("searchForm");
+  const loadingState = $("loadingState");
+  const errorState = $("errorState");
+  const emptyState = $("emptyState");
+  const resultsHeader = $("resultsHeader");
+  const resultsCount = $("resultsCount");
+  const resultsList = $("resultsList");
+  const clearFiltersButton = $("clearFilters");
+  const toggleAdvancedButton = $("toggleAdvanced");
+  const advancedFilters = $("advancedFilters");
+  const activeFilters = $("activeFilters");
+
+  // ---------- UI state ----------
+  function setLoading(isLoading) {
+    if (!loadingState) return;
+    loadingState.classList.toggle("hidden", !isLoading);
+  }
+
+  function setError(isError) {
+    if (!errorState) return;
+    errorState.classList.toggle("hidden", !isError);
+  }
+
+  function setEmpty(isEmpty) {
+    if (!emptyState) return;
+    emptyState.classList.toggle("hidden", !isEmpty);
+  }
+
+  function setResultsHeader(visible, count) {
+    if (!resultsHeader) return;
+    resultsHeader.classList.toggle("hidden", !visible);
+    if (visible && resultsCount) {
+      resultsCount.textContent = `Found ${count} scholarships`;
+    }
+  }
+
+  function toggleAdvancedFilters() {
+    if (!advancedFilters || !toggleAdvancedButton) return;
+    const isHidden = advancedFilters.classList.contains("hidden");
+    advancedFilters.classList.toggle("hidden", !isHidden);
+
+    // don't destroy the SVG: update only a nested span if present
+    const span = toggleAdvancedButton.querySelector("span");
+    if (span) span.textContent = isHidden ? "Show less" : "Show more";
+    else toggleAdvancedButton.textContent = isHidden ? "Show less" : "Show more";
+  }
+
+  // ---------- filters pills ----------
+  function buildActiveFilterPills() {
+    if (!activeFilters) return;
+
+    const pills = [];
+    const mappings = [
+      { id: "search", label: "Keyword" },
+      { id: "amount", label: "Amount" },
+      { id: "deadline", label: "Deadline" },
+      { id: "level_of_study", label: "Level" },
+      { id: "sort", label: "Sort" },
+      { id: "organization_type", label: "Org" },
+      { id: "gender", label: "Gender" },
+      { id: "background_factors", label: "Background" },
+      { id: "age_group", label: "Age" },
+      { id: "social_impact", label: "Impact" },
+      { id: "citizenship_status", label: "Citizenship" },
+      { id: "origin_region", label: "Region" }, // safe even if missing
+    ];
+
+    for (const item of mappings) {
+      const v = val(item.id);
+      if (v) pills.push(`${item.label}: ${v}`);
+    }
+
+    const industryValues = Array.from(
+      document.querySelectorAll('input[name="industries"]:checked')
+    )
+      .map((i) => i.value)
+      .filter(Boolean);
+
+    if (industryValues.length) {
+      pills.push(
+        `Industries: ${industryValues.slice(0, 3).join(", ")}${
+          industryValues.length > 3 ? " +" + (industryValues.length - 3) : ""
+        }`
+      );
+    }
+
+    if (checked("recently_closed")) pills.push("Include recently closed");
+
+    if (!pills.length) {
+      activeFilters.textContent =
+        "No filters applied yet. Start with a keyword or quick filters.";
+      return;
+    }
+
+    activeFilters.innerHTML = pills
+      .map(
+        (pill) =>
+          `<span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm">${pill}</span>`
+      )
+      .join(" ");
+  }
+
+  function hasAdvancedFilters() {
+    const advancedIds = [
+      "organization_type",
+      "gender",
+      "background_factors",
+      "age_group",
+      "social_impact",
+      "citizenship_status",
+      "origin_region",
+    ];
+    const hasAdvancedValue = advancedIds.some((id) => !!val(id));
+    const industriesSelected =
+      document.querySelectorAll('input[name="industries"]:checked').length > 0;
+    return hasAdvancedValue || industriesSelected;
+  }
+
+  // ---------- formatting ----------
+  function formatMoney(amount) {
+    if (amount === null || amount === undefined || amount === "") return "N/A";
+    const n = Number(amount);
+    if (!Number.isFinite(n)) return "N/A";
+    return `$${n.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`;
+  }
+
+  function formatAmountDisplay(scholarship) {
+    if (scholarship.amount_display) return scholarship.amount_display;
+    return formatMoney(scholarship.amount);
+  }
+
+  function formatDate(isoDate) {
+    if (!isoDate) return "Deadline not listed";
+    const d = new Date(isoDate);
+    if (Number.isNaN(d.getTime())) return "Deadline not listed";
+    return d.toLocaleDateString("en-US", {
+      month: "long",
+      day: "2-digit",
+      year: "numeric",
+    });
+  }
+
+  function daysUntil(isoDate) {
+    if (!isoDate) return null;
+    const deadline = new Date(isoDate);
+    if (Number.isNaN(deadline.getTime())) return null;
+    const today = new Date();
+    const base = new Date(today.setHours(0, 0, 0, 0)).getTime();
+    return Math.ceil((deadline.getTime() - base) / (1000 * 60 * 60 * 24));
+  }
+
+  function urgencyBadge(days) {
+    if (days === null) {
+      return '<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">Deadline not listed</span>';
+    }
+    if (days < 0) {
+      const closedDays = Math.abs(days);
+      return `<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">Closed ${closedDays} days ago</span>`;
+    }
+    if (days <= 7) {
+      return `<span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">${days} days left</span>`;
+    }
+      if (days <= 30) {
+        return `<span class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">${days} days left</span>`;
+      }
+    return `<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">${days} days left</span>`;
+  }
+
+  // ---------- results rendering ----------
+function renderResults(scholarships) {
+  if (!resultsList) return;
+
+  resultsList.innerHTML = "";
+  setResultsHeader(true, scholarships.length);
+
+  const showRecentlyClosed = checked("recently_closed");
+
+  scholarships.forEach((scholarship) => {
+    const days = daysUntil(scholarship.deadline);
+    if (days !== null && days < 0 && !showRecentlyClosed) return;
+
+    const card = document.createElement("div");
+    card.className =
+      "group relative overflow-hidden rounded-xl border border-gray-200/60 bg-white p-6 transition-all duration-200 hover:border-gray-300 hover:shadow-lg backdrop-blur-sm";
+
+    card.onclick = () => {
+      window.location.href = `/scholarship/${scholarship.id}`;
+    };
+
+    const description = scholarship.description || "";
+    const shortDescription =
+      description.length > 120 ? `${description.slice(0, 120)}...` : description;
+
+    const orgName = scholarship.organization_name || "";
+    const awardAmount = formatAmountDisplay(scholarship);
+    const deadlineText = formatDate(scholarship.deadline);
+    const urgency = urgencyBadge(days);
+
+    card.innerHTML = `
+      <!-- Subtle left accent border -->
+      <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500/20 to-cyan-400/20"></div>
+      
+      <div class="relative pl-4">
+        <!-- Title and organization row -->
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-2">
+            <h3 class="text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
+              ${scholarship.title || ""}
+            </h3>
+            ${
+              orgName
+                ? `<div class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    ${orgName}
+                  </div>`
+                : ""
+            }
+          </div>
+          
+          <!-- Award amount - minimal display -->
+          <div class="text-right">
+            <p class="text-xs font-medium text-gray-900">${awardAmount}</p>
+            <p class="text-xs text-gray-500">Award</p>
+          </div>
+        </div>
+
+        <!-- Description -->
+        ${
+          shortDescription
+            ? `<p class="mt-3 text-sm text-gray-600 leading-relaxed">${shortDescription}</p>`
+            : ""
+        }
+
+        <!-- Metadata line -->
+        <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+          <!-- Deadline -->
+          <div class="flex items-center gap-1.5">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            ${deadlineText}
+          </div>
+
+          <!-- Study Level (if available) -->
+          ${
+            scholarship.level_of_study
+              ? `<div class="flex items-center gap-1.5">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                  </svg>
+                  ${scholarship.level_of_study}
+                </div>`
+              : ""
+          }
+
+          <!-- Type/Category (if available) -->
+          ${
+            scholarship.type
+              ? `<div class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700">
+                  ${scholarship.type}
+                </div>`
+              : ""
+          }
+        </div>
+
+        <!-- Bottom action row -->
+        <div class="mt-4 flex items-center justify-between pt-4 border-t border-gray-100">
+          <!-- Urgency indicator -->
+          <div class="flex items-center gap-2">
+            ${urgency.replace('rounded-lg', 'rounded-md').replace('px-3 py-1.5', 'px-2 py-1')}
+            <span class="text-xs text-gray-500">${getDaysTextCompact(days)}</span>
+          </div>
+
+          <!-- Minimal view button -->
+          <button class="group/view inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50">
+            View
+            <svg class="h-3.5 w-3.5 transition-transform group-hover/view:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hover effect - subtle -->
+      <div class="absolute inset-0 rounded-xl ring-1 ring-blue-500/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100"></div>
+    `;
+
+    // Add click handler to the view button specifically
+    const viewBtn = card.querySelector('button');
+    if (viewBtn) {
+      viewBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = `/scholarship/${scholarship.id}`;
+      };
+    }
+
+    resultsList.appendChild(card);
+  });
+}
+
+// Helper function for compact days text
+function getDaysTextCompact(days) {
+  if (days === null) return "No deadline";
+  if (days < 0) return "Closed";
+  if (days === 0) return "Today";
+  if (days === 1) return "1 day";
+  if (days <= 7) return `${days}d`;
+  if (days <= 30) return `${Math.floor(days / 7)}w`;
+  return `${Math.floor(days / 30)}mo`;
+}
+
+
+  // ---------- API params ----------
+  function buildApiParams() {
+    const params = new URLSearchParams();
+
+    const search = val("search");
+    const amount = val("amount");
+    const deadline = val("deadline");
+    const organizationType = val("organization_type");
+    const sort = val("sort");
+    const recentlyClosed = checked("recently_closed");
+    const gender = val("gender");
+    const backgroundFactors = val("background_factors");
+    const ageGroup = val("age_group");
+    const socialImpact = val("social_impact");
+    const levelOfStudy = val("level_of_study");
+    const citizenshipStatus = val("citizenship_status");
+    const originRegion = val("origin_region"); // SAFE even if missing
+
+    const industryValues = Array.from(
+      document.querySelectorAll('input[name="industries"]:checked')
+    )
+      .map((input) => input.value)
+      .filter(Boolean);
+
+    if (search) params.set("q", search);
+
+    if (amount) {
+      if (amount.endsWith("+")) {
+        params.set("min_amount", amount.replace("+", ""));
+      } else if (amount.includes("-")) {
+        const [minAmount, maxAmount] = amount.split("-");
+        params.set("min_amount", minAmount);
+        params.set("max_amount", maxAmount);
+      }
+    }
+
+    if (deadline) {
+      const days = parseInt(deadline, 10);
+      if (!Number.isNaN(days)) {
+        const from = new Date();
+        const to = new Date();
+        to.setDate(to.getDate() + days);
+        params.set("deadline_from", from.toISOString().slice(0, 10));
+        params.set("deadline_to", to.toISOString().slice(0, 10));
+      }
+    }
+
+    if (organizationType) params.set("organization_type", organizationType);
+    if (gender) params.set("gender", gender);
+    if (backgroundFactors) params.set("background_factors", backgroundFactors);
+    if (ageGroup) params.set("age_group", ageGroup);
+    if (socialImpact) params.set("social_impact", socialImpact);
+    if (levelOfStudy) params.set("level_of_study", levelOfStudy);
+    if (citizenshipStatus) params.set("citizenship_status", citizenshipStatus);
+    if (originRegion) params.set("origin_region", originRegion);
+
+    if (industryValues.length) params.set("industries", industryValues.join(","));
+
+    // sorting
+    if (sort === "amount_desc") {
+      params.set("sort_by", "amount");
+      params.set("sort_order", "desc");
+    } else if (sort === "amount_asc") {
+      params.set("sort_by", "amount");
+      params.set("sort_order", "asc");
+    } else if (sort === "title") {
+      params.set("sort_by", "title");
+      params.set("sort_order", "asc");
+    } else if (sort === "industry") {
+      params.set("sort_by", "industry");
+      params.set("sort_order", "asc");
+    } else {
+      params.set("sort_by", "deadline");
+      params.set("sort_order", "asc");
+    }
+
+    if (recentlyClosed) params.set("recently_closed", "1");
+
+    return params;
+  }
+
+  // ---------- URL syncing (kept same as your approach) ----------
+  function updateUrl(params) {
+    const url = new URL(window.location);
+    url.search = params.toString();
+    window.history.pushState({}, "", url);
+  }
+
+  function syncUrlToForm() {
+    // this stores the FORM state in the URL (not the API params)
+    const params = new URLSearchParams();
+    const fields = [
+      "search",
+      "amount",
+      "deadline",
+      "organization_type",
+      "sort",
+      "gender",
+      "background_factors",
+      "age_group",
+      "social_impact",
+      "level_of_study",
+      "citizenship_status",
+      "origin_region",
+    ];
+    fields.forEach((field) => {
+      const v = val(field);
+      if (v) params.set(field, v);
+    });
+
+    if (checked("recently_closed")) params.set("recently_closed", "1");
+
+    const industries = Array.from(
+      document.querySelectorAll('input[name="industries"]:checked')
+    )
+      .map((i) => i.value)
+      .filter(Boolean);
+
+    if (industries.length) params.set("industries", industries.join(","));
+
+    updateUrl(params);
+    buildActiveFilterPills();
+  }
+
+  function applyQueryParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    setVal("search", urlParams.get("search") || "");
+    setVal("amount", urlParams.get("amount") || "");
+    setVal("deadline", urlParams.get("deadline") || "");
+    setVal("organization_type", urlParams.get("organization_type") || "");
+    setVal("sort", urlParams.get("sort") || "deadline");
+    setChecked("recently_closed", urlParams.get("recently_closed") === "1");
+
+    setVal("gender", urlParams.get("gender") || "");
+    setVal("background_factors", urlParams.get("background_factors") || "");
+    setVal("age_group", urlParams.get("age_group") || "");
+    setVal("social_impact", urlParams.get("social_impact") || "");
+    setVal("level_of_study", urlParams.get("level_of_study") || "");
+    setVal("citizenship_status", urlParams.get("citizenship_status") || "");
+    setVal("origin_region", urlParams.get("origin_region") || "");
+
+    const industries = (urlParams.get("industries") || "")
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    document.querySelectorAll('input[name="industries"]').forEach((input) => {
+      input.checked = industries.includes(input.value);
+    });
+
+    buildActiveFilterPills();
+
+    if (hasAdvancedFilters() && advancedFilters) {
+      advancedFilters.classList.remove("hidden");
+      if (toggleAdvancedButton) {
+        const span = toggleAdvancedButton.querySelector("span");
+        if (span) span.textContent = "Show less";
+        else toggleAdvancedButton.textContent = "Show less";
+      }
+    }
+  }
+
+  // ---------- main search ----------
+  function performSearch() {
+    setLoading(true);
+    setError(false);
+    setEmpty(false);
+    setResultsHeader(false, 0);
+
+    const apiParams = buildApiParams();
+    syncUrlToForm();
+
+    fetch(`/api/scholarships/search?${apiParams.toString()}`)
+      .then((response) => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
+      .then((data) => {
+        setLoading(false);
+
+        const scholarships = Array.isArray(data.scholarships)
+          ? data.scholarships
+          : [];
+
+        if (!scholarships.length) {
+          setEmpty(true);
+          if (resultsList) resultsList.innerHTML = "";
+          setResultsHeader(false, 0);
+          return;
+        }
+
+        renderResults(scholarships);
+      })
+      .catch((err) => {
+        console.error("Search error:", err);
+        setLoading(false);
+        setError(true);
+      });
+  }
+
+  // ---------- options population ----------
+  function humanizeOption(value) {
+    if (!value) return "";
+    const normalized = String(value).trim();
+    if (!normalized) return "";
+    if (normalized.toLowerCase() === "stem") return "STEM";
+    return normalized
+      .split("-")
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ");
+  }
+
+  function populateSelect(selectId, options, placeholder) {
+    const select = $(selectId);
+    if (!select) return;
+
+    select.innerHTML = "";
+
+    const placeholderOption = document.createElement("option");
+    placeholderOption.value = "";
+    placeholderOption.textContent = placeholder;
+    select.appendChild(placeholderOption);
+
+    if (!Array.isArray(options)) return;
+
+    options.forEach((option) => {
+      if (!option) return;
+
+      let value = option;
+      let label = "";
+
+      if (typeof option === "object" && Object.prototype.hasOwnProperty.call(option, "value")) {
+        value = option.value;
+        label = option.label || "";
+      }
+
+      const valueText = String(value || "").trim();
+      if (!valueText) return;
+
+      const optionLabel = label || humanizeOption(valueText);
+
+      const opt = document.createElement("option");
+      opt.value = valueText;
+      opt.textContent = optionLabel || valueText;
+      select.appendChild(opt);
+    });
+  }
+
+  function loadFilterOptions() {
+    fetch("/api/scholarships/filter-options")
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to load filter options");
+        return response.json();
+      })
+      .then((data) => {
+        populateSelect("organization_type", data.organization_types, "All Types");
+        populateSelect("amount", data.amount_options, "Any Amount");
+        populateSelect("deadline", data.deadline_options, "Any Deadline");
+        populateSelect("sort", data.sort_options, "Sort By");
+        populateSelect("gender", data.gender_options, "Any");
+        populateSelect("background_factors", data.background_factors_options, "Any");
+        populateSelect("age_group", data.age_group_options, "Any");
+        populateSelect("social_impact", data.social_impact_options, "Any");
+        populateSelect("level_of_study", data.level_of_study, "Any");
+        populateSelect("citizenship_status", data.citizenship_status_options, "Any");
+        populateSelect("origin_region", data.origin_region_options, "Any");
+
+        // industries (checkboxes)
+        const industryContainer = $("industry-options");
+        if (industryContainer && Array.isArray(data.industries)) {
+          industryContainer.innerHTML = "";
+          data.industries.forEach((industry) => {
+            if (!industry) return;
+
+            const raw = String(industry).trim();
+            if (!raw) return;
+
+            const value = raw.toLowerCase();
+            const labelText = humanizeOption(value);
+
+            const label = document.createElement("label");
+            label.className = "flex items-center gap-2 text-sm text-slate-600";
+
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.name = "industries";
+            input.value = value;
+            input.className =
+              "h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900";
+            input.addEventListener("change", performSearch);
+
+            const span = document.createElement("span");
+            span.textContent = labelText;
+
+            label.appendChild(input);
+            label.appendChild(span);
+            industryContainer.appendChild(label);
+          });
+        }
+
+        applyQueryParams();
+        performSearch();
+      })
+      .catch((error) => {
+        console.error("Filter options error:", error);
+        applyQueryParams();
+        performSearch();
+      });
+  }
+
+  // ---------- event wiring ----------
+  on(searchForm, "submit", (event) => {
+    event.preventDefault();
+    performSearch();
+  });
+
+  on(toggleAdvancedButton, "click", toggleAdvancedFilters);
+
+  // Run search when selects/checkboxes change (your original behavior)
+  document
+    .querySelectorAll('#searchForm select, #searchForm input[type="checkbox"]')
+    .forEach((input) => input.addEventListener("change", performSearch));
+
+  // Debounced typing for search box
+  let searchTimeout;
+  document
+    .querySelectorAll('#searchForm input[type="text"]')
+    .forEach((input) =>
+      input.addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 400);
+      })
+    );
+
+  on(clearFiltersButton, "click", () => {
+    setVal("search", "");
+    setVal("amount", "");
+    setVal("deadline", "");
+    setVal("organization_type", "");
+    setVal("sort", "deadline");
+    setChecked("recently_closed", false);
+    setVal("gender", "");
+    setVal("background_factors", "");
+    setVal("age_group", "");
+    setVal("social_impact", "");
+    setVal("level_of_study", "");
+    setVal("citizenship_status", "");
+    setVal("origin_region", "");
+
+    document.querySelectorAll('input[name="industries"]').forEach((i) => (i.checked = false));
+
+    if (advancedFilters) advancedFilters.classList.add("hidden");
+
+    if (toggleAdvancedButton) {
+      const span = toggleAdvancedButton.querySelector("span");
+      if (span) span.textContent = "Show more";
+      else toggleAdvancedButton.textContent = "Show more";
+    }
+
+    performSearch();
+  });
+
+  window.addEventListener("popstate", () => {
+    applyQueryParams();
+    performSearch();
+  });
+
+  // ---------- bootstrap ----------
+  loadFilterOptions();
+</script>
+
+
+  </body>
+</html>
