@@ -33,7 +33,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
               </div>
-              <span class="text-lg font-semibold text-gray-900">Scholarship Atlas</span>
+              <span class="text-lg font-semibold text-gray-900">OysterMatch</span>
             </div>
           </div>
           <div class="flex items-center space-x-4">
@@ -97,7 +97,7 @@
           </div>
 
           <!-- Quick filters -->
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             <div>
               <label for="amount" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Funding Amount
@@ -147,6 +147,18 @@
                 class="block w-full rounded-lg border-gray-200 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Sort By</option>
+              </select>
+            </div>
+            <div>
+              <label for="year_of_study" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Year of Study
+              </label>
+              <select
+                id="year_of_study"
+                name="year_of_study"
+                class="block w-full rounded-lg border-gray-200 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Any year</option>
               </select>
             </div>
           </div>
@@ -799,7 +811,8 @@ function getDaysTextCompact(days) {
     const amount = val("amount");
     const deadline = val("deadline");
     const organizationType = val("organization_type");
-    const sort = val("sort");
+        const sort = val("sort");
+        const yearOfStudy = val("year_of_study");
     const recentlyClosed = checked("recently_closed");
     const gender = val("gender");
     const backgroundFactors = val("background_factors");
@@ -838,7 +851,8 @@ function getDaysTextCompact(days) {
       }
     }
 
-    if (organizationType) params.set("organization_type", organizationType);
+        if (organizationType) params.set("organization_type", organizationType);
+        if (yearOfStudy) params.set("year_of_study", yearOfStudy);
     if (gender) params.set("gender", gender);
     if (backgroundFactors) params.set("background_factors", backgroundFactors);
     if (ageGroup) params.set("age_group", ageGroup);
@@ -888,6 +902,7 @@ function getDaysTextCompact(days) {
       "deadline",
       "organization_type",
       "sort",
+      "year_of_study",
       "gender",
       "background_factors",
       "age_group",
@@ -922,6 +937,7 @@ function getDaysTextCompact(days) {
     setVal("amount", urlParams.get("amount") || "");
     setVal("deadline", urlParams.get("deadline") || "");
     setVal("organization_type", urlParams.get("organization_type") || "");
+    setVal("year_of_study", urlParams.get("year_of_study") || "");
     setVal("sort", urlParams.get("sort") || "deadline");
     setChecked("recently_closed", urlParams.get("recently_closed") === "1");
 
@@ -1056,6 +1072,7 @@ function getDaysTextCompact(days) {
         populateSelect("age_group", data.age_group_options, "Any");
         populateSelect("social_impact", data.social_impact_options, "Any");
         populateSelect("level_of_study", data.level_of_study, "Any");
+        populateSelect("year_of_study", data.year_of_study_options || [], "Any year");
         populateSelect("citizenship_status", data.citizenship_status_options, "Any");
         populateSelect("origin_region", data.origin_region_options, "Any");
 

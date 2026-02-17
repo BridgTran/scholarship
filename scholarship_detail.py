@@ -28,11 +28,13 @@ def get_scholarship_detail(scholarship_id):
                     s.title,
                     s.description,
                     s.amount,
+                    s.amount_type,
                     s.benefits_text,
                     s.deadline,
                     s.application_url,
                     s.industry,
                     s.status,
+                    s.requires_application,
                     s.created_at,
                     o.id as organization_id,
                     o.name as organization_name,
@@ -79,17 +81,23 @@ def get_scholarship_detail(scholarship_id):
                     'inclusion_keywords': criteria_row.inclusion_keywords,
                     'exclusion_keywords': criteria_row.exclusion_keywords
                 })
-
             # Build response
             amount_display = None
-            if scholarship_row.benefits_text:
+
+            # Check if scholarship uses percentage amount_type
+            if hasattr(scholarship_row, 'amount_type') and scholarship_row.amount_type == 'PERCENTAGE' and scholarship_row.amount is not None:
+                percent_value = scholarship_row.amount * 100
+                amount_display = f"{percent_value:.0f}% tuition contribution"
+            # Fallback: check if amount is between 0-1
+            elif scholarship_row.amount is not None and 0 < scholarship_row.amount < 1:
+                percent_value = scholarship_row.amount * 100
+                amount_display = f"{percent_value:.0f}% tuition contribution"
+            # Check benefits_text for percentage
+            elif scholarship_row.benefits_text:
                 percent_match = re.search(r'(\d+(?:\.\d+)?)\s*%', scholarship_row.benefits_text)
                 if percent_match and re.search(r'tuition', scholarship_row.benefits_text, re.IGNORECASE):
                     amount_display = f"{percent_match.group(1)}% tuition contribution"
-            if amount_display is None and scholarship_row.amount is not None:
-                if 0 < scholarship_row.amount < 1:
-                    percent_value = scholarship_row.amount * 100
-                    amount_display = f"{percent_value:.0f}% tuition contribution"
+
             scholarship_detail = {
                 'id': scholarship_row.id,
                 'title': scholarship_row.title,
@@ -101,6 +109,7 @@ def get_scholarship_detail(scholarship_id):
                 'application_url': scholarship_row.application_url,
                 'industry': scholarship_row.industry,
                 'status': scholarship_row.status,
+                'requires_application': scholarship_row.requires_application,
                 'created_at': scholarship_row.created_at.isoformat() if scholarship_row.created_at else None,
                 'organization': {
                     'id': scholarship_row.organization_id,

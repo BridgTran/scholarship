@@ -76,6 +76,7 @@ def search_scholarships():
         residency_status = request.args.get('residency_status', '').strip()
         nationality = request.args.get('nationality', '').strip()
         origin_region = request.args.get('origin_region', '').strip()
+        year_of_study = request.args.get('year_of_study', '').strip()
         study_state = request.args.get('study_state', '').strip()
         page = request.args.get('page', 1, type=int)
         per_page = min(request.args.get('per_page', 20, type=int), 100)  # Max 100 per page
@@ -185,6 +186,15 @@ def search_scholarships():
                 ['academic_level'],
                 parse_list_param(level_of_study),
                 'level_of_study'
+            )
+        if year_of_study:
+            add_criteria_filter(
+                where_conditions,
+                params,
+                ['academic_level'],
+                parse_list_param(year_of_study),
+                'year_of_study',
+                criteria_key='year_of_study'
             )
 
         if not residency_status and citizenship_status:
@@ -453,6 +463,13 @@ def get_filter_options():
                 {'value': '90', 'label': 'Next 3 months'},
                 {'value': '365', 'label': 'Next year'}
             ]
+            year_of_study_options = [
+                {'value': 'YEAR_1', 'label': '1st year'},
+                {'value': 'YEAR_2', 'label': '2nd year'},
+                {'value': 'YEAR_3', 'label': '3rd year'},
+                {'value': 'YEAR_4', 'label': '4th year'},
+                {'value': 'FINAL_YEAR', 'label': 'Final year'}
+            ]
 
             return jsonify({
                 'organization_types': organization_types,
@@ -463,6 +480,7 @@ def get_filter_options():
                     'phd',
                     'vocational'
                 ],
+                'year_of_study_options': year_of_study_options,
                 'gender_options': gender_options,
                 'background_factors_options': background_factors_options,
                 'age_group_options': age_group_options,
