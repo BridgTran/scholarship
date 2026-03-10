@@ -57,7 +57,7 @@
           <span class="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Funding Future</span>
         </h1>
         <p class="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-          Smart search, intelligent filters, and personalized recommendations to match you with perfect scholarships
+          Matching students to their funding pearls — with smart search, intelligent filters, and personalised recommendations.
         </p>
       </div>
 
@@ -159,6 +159,23 @@
                 class="block w-full rounded-lg border-gray-200 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Any year</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="scholarship_type" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Scholarship Type
+              </label>
+              <select
+                id="scholarship_type"
+                name="scholarship_type"
+                class="block w-full rounded-lg border-gray-200 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All types</option>
+                <option value="Merit-Based">🏆 Merit-Based</option>
+                <option value="Need-Based">💰 Need-Based</option>
+                <option value="Merit-And-Need">⭐ Merit & Need</option>
+                <option value="Other">📋 Other</option>
               </select>
             </div>
           </div>
@@ -813,6 +830,7 @@ function getDaysTextCompact(days) {
     const organizationType = val("organization_type");
         const sort = val("sort");
         const yearOfStudy = val("year_of_study");
+    const scholarshipType = val("scholarship_type");
     const recentlyClosed = checked("recently_closed");
     const gender = val("gender");
     const backgroundFactors = val("background_factors");
@@ -853,6 +871,7 @@ function getDaysTextCompact(days) {
 
         if (organizationType) params.set("organization_type", organizationType);
         if (yearOfStudy) params.set("year_of_study", yearOfStudy);
+    if (scholarshipType) params.set("scholarship_type", scholarshipType);
     if (gender) params.set("gender", gender);
     if (backgroundFactors) params.set("background_factors", backgroundFactors);
     if (ageGroup) params.set("age_group", ageGroup);
