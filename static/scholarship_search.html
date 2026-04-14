@@ -793,6 +793,77 @@
     return `<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">${days} days left</span>`;
   }
 
+  // ---------- eligibility hint badges ----------
+  function buildEligibilityHints(scholarship) {
+    const badges = [];
+    const lines  = [];
+
+    // Residency
+    const residencyMap = {
+      INTERNATIONAL:    { emoji: '🌏', label: 'International', color: 'blue' },
+      CITIZEN_OR_PR:    { emoji: '🇦🇺', label: 'Citizens/PR',   color: 'green' },
+      DOMESTIC:         { emoji: '🇦🇺', label: 'Domestic',      color: 'green' },
+      CITIZEN:          { emoji: '🇦🇺', label: 'AU Citizens',   color: 'green' },
+      PERMANENT_RESIDENT: { emoji: '🇦🇺', label: 'Perm. Resident', color: 'green' },
+    };
+    if (scholarship.residency_hint) {
+      const r = residencyMap[scholarship.residency_hint.toUpperCase()] || {
+        emoji: '🌏', label: scholarship.residency_hint, color: 'blue'
+      };
+      badges.push({ ...r, type: 'residency' });
+      lines.push(`${r.emoji} ${r.label} students only`);
+    }
+
+    // Degree level
+    const degreeMap = {
+      UNDERGRADUATE: { emoji: '🎓', label: 'Undergrad',  color: 'purple' },
+      POSTGRADUATE:  { emoji: '🎓', label: 'Postgrad',   color: 'purple' },
+      HDR:           { emoji: '🔬', label: 'HDR / PhD',  color: 'purple' },
+      PHD:           { emoji: '🔬', label: 'PhD',        color: 'purple' },
+      HONOURS:       { emoji: '🎓', label: 'Honours',    color: 'purple' },
+      MASTERS:       { emoji: '🎓', label: 'Masters',    color: 'purple' },
+      DIPLOMA:       { emoji: '📋', label: 'Diploma',    color: 'purple' },
+    };
+    if (scholarship.degree_hint) {
+      const d = degreeMap[scholarship.degree_hint.toUpperCase()] || {
+        emoji: '🎓', label: scholarship.degree_hint, color: 'purple'
+      };
+      badges.push({ ...d, type: 'degree' });
+      lines.push(`${d.emoji} ${d.label} degree`);
+    }
+
+    // Location
+    const stateHint = scholarship.study_state_hint
+      || (scholarship.jurisdiction_state || '').replace(/^Australia,\s*/i, '').trim();
+    if (stateHint) {
+      badges.push({ emoji: '📍', label: stateHint, color: 'slate', type: 'location' });
+      lines.push(`📍 Study in ${stateHint}`);
+    }
+
+    // Scholarship type (from existing field, as 4th tooltip line only)
+    const typeMap = {
+      'Merit-Based':    '🏆 Merit-based',
+      'Need-Based':     '💰 Need-based',
+      'Merit-And-Need': '⭐ Merit & need',
+    };
+    if (scholarship.scholarship_type && typeMap[scholarship.scholarship_type]) {
+      lines.push(typeMap[scholarship.scholarship_type]);
+    }
+
+    return { badges, lines };
+  }
+
+  function badgePill(badge) {
+    const colorMap = {
+      blue:   'bg-blue-50 border-blue-100 text-blue-700',
+      green:  'bg-green-50 border-green-100 text-green-700',
+      purple: 'bg-purple-50 border-purple-100 text-purple-700',
+      slate:  'bg-slate-50 border-slate-200 text-slate-600',
+    };
+    const cls = colorMap[badge.color] || colorMap.slate;
+    return `<span class="inline-flex items-center gap-0.5 rounded-full border ${cls} px-2 py-0.5 text-[10px] font-medium">${escapeHtml(badge.emoji)} ${escapeHtml(badge.label)}</span>`;
+  }
+
   // ---------- results rendering ----------
 function renderResults(scholarships) {
   if (!resultsList) return;
@@ -822,6 +893,19 @@ function renderResults(scholarships) {
     const awardAmount = formatAmountDisplay(scholarship);
     const deadlineText = formatDate(scholarship.deadline);  // null if no deadline
     const urgency = urgencyBadge(days);
+    const { badges, lines } = buildEligibilityHints(scholarship);
+    const badgesHtml = badges.length
+      ? `<div class="mt-2 flex flex-wrap gap-1">${badges.map(badgePill).join('')}</div>`
+      : '';
+    const tooltipHtml = lines.length ? `
+      <div class="max-h-0 overflow-hidden opacity-0 transition-all duration-200 group-hover:max-h-40 group-hover:opacity-100">
+        <div class="mt-3 border-t border-gray-100 pt-3">
+          <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-500">⚡ Quick eligibility check</p>
+          <ul class="space-y-1">
+            ${lines.map(l => `<li class="text-xs text-gray-600">${escapeHtml(l)}</li>`).join('')}
+          </ul>
+        </div>
+      </div>` : '';
 
     card.innerHTML = `
       <!-- Subtle left accent border -->
@@ -844,6 +928,7 @@ function renderResults(scholarships) {
                   </div>`
                 : ""
             }
+            ${badgesHtml}
           </div>
 
           <!-- Award amount - minimal display -->
@@ -913,6 +998,9 @@ function renderResults(scholarships) {
             </svg>
           </button>
         </div>
+      </div>
+
+        ${tooltipHtml}
       </div>
 
       <!-- Hover effect - subtle -->

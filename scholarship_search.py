@@ -290,10 +290,32 @@ def search_scholarships():
                 s.deadline,
                 s.industry,
                 s.status,
+                s.scholarship_type,
                 o.name as organization_name,
                 o.type as organization_type,
                 o.jurisdiction_state,
-                o.jurisdiction_country
+                o.jurisdiction_country,
+                (SELECT ec.required_value
+                 FROM eligibility_criteria ec
+                 WHERE ec.scholarship_id = s.id
+                   AND ec.criteria_type IN ('demographic','demographics')
+                   AND ec.criteria_key = 'residency_status'
+                   AND ec.is_required = 1
+                 LIMIT 1) AS residency_hint,
+                (SELECT ec.required_value
+                 FROM eligibility_criteria ec
+                 WHERE ec.scholarship_id = s.id
+                   AND ec.criteria_type = 'academic_level'
+                   AND ec.criteria_key IN ('level','degree_level')
+                   AND ec.is_required = 1
+                 LIMIT 1) AS degree_hint,
+                (SELECT ec.required_value
+                 FROM eligibility_criteria ec
+                 WHERE ec.scholarship_id = s.id
+                   AND ec.criteria_type = 'location'
+                   AND ec.criteria_key = 'study_state'
+                   AND ec.is_required = 1
+                 LIMIT 1) AS study_state_hint
                 {relevance_col}
             FROM scholarships s
             JOIN organizations o ON s.organization_id = o.id
@@ -327,11 +349,15 @@ def search_scholarships():
                     'amount_display': amount_display,
                     'deadline': row.deadline.isoformat() if row.deadline else None,
                     'industry': row.industry,
+                    'scholarship_type': row.scholarship_type,
                     'jurisdiction_state': row.jurisdiction_state,
                     'jurisdiction_country': row.jurisdiction_country,
                     'organization_name': row.organization_name,
                     'organization_type': row.organization_type,
-                    'status': row.status
+                    'status': row.status,
+                    'residency_hint': row.residency_hint,
+                    'degree_hint': row.degree_hint,
+                    'study_state_hint': row.study_state_hint,
                 })
 
             # Get total count
