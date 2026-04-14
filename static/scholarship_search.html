@@ -526,6 +526,9 @@
     if (el) el.addEventListener(event, handler);
   }
 
+  // ---------- search request controller (race condition guard) ----------
+  let currentSearchController = null;
+
   // ---------- element refs ----------
   const searchForm = $("searchForm");
   const loadingState = $("loadingState");
@@ -1113,7 +1116,11 @@ function getDaysTextCompact(days) {
     const apiParams = buildApiParams();
     syncUrlToForm();
 
-    fetch(`/api/scholarships/search?${apiParams.toString()}`)
+    // Cancel any previous in-flight request so stale results never overwrite newer ones
+    if (currentSearchController) currentSearchController.abort();
+    currentSearchController = new AbortController();
+
+    fetch(`/api/scholarships/search?${apiParams.toString()}`, { signal: currentSearchController.signal })
       .then((response) => {
         if (!response.ok) throw new Error("Network response was not ok");
         return response.json();
@@ -1138,6 +1145,7 @@ function getDaysTextCompact(days) {
         }
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return; // stale request superseded by a newer one — ignore
         console.error("Search error:", err);
         setLoading(false);
         setError(true);
@@ -1280,6 +1288,10 @@ function getDaysTextCompact(days) {
     );
 
   on(clearFiltersButton, "click", doResetAllFilters);
+
+  // Error state buttons
+  on($('retryButton'),   'click', () => { setError(false); performSearch(); });
+  on($('refreshButton'), 'click', () => window.location.reload());
 
   window.addEventListener("popstate", () => {
     applyQueryParams();

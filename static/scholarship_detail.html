@@ -776,10 +776,10 @@
           // 🎓 You must be — card-style checklist
           if (requirementLines.length > 0) {
             const reqPanel = document.createElement('div');
-            reqPanel.className = 'rounded-xl border border-emerald-100 bg-emerald-50/40 p-5';
+            reqPanel.className = 'rounded-xl border border-blue-100 bg-blue-50/40 p-5';
 
             const reqHeading = document.createElement('p');
-            reqHeading.className = 'mb-4 text-xs font-semibold uppercase tracking-wider text-emerald-700';
+            reqHeading.className = 'mb-4 text-xs font-semibold uppercase tracking-wider text-blue-700';
             reqHeading.textContent = '🎓 You must be';
             reqPanel.appendChild(reqHeading);
 
@@ -787,7 +787,7 @@
             reqList.className = 'space-y-2';
             requirementLines.forEach(({ text, emoji }) => {
               const li = document.createElement('li');
-              li.className = 'flex items-center gap-3 rounded-lg border border-emerald-100 bg-white px-4 py-3 shadow-sm';
+              li.className = 'flex items-center gap-3 rounded-lg border border-blue-100 bg-white px-4 py-3 shadow-sm hover:shadow-md hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-default';
 
               const emojiSpan = document.createElement('span');
               emojiSpan.className = 'shrink-0 text-base leading-none';
@@ -819,7 +819,7 @@
             excList.className = 'space-y-2';
             exclusionLines.forEach(line => {
               const li = document.createElement('li');
-              li.className = 'flex items-center gap-3 rounded-lg border border-red-100 bg-white px-4 py-3 shadow-sm';
+              li.className = 'flex items-center gap-3 rounded-lg border border-red-100 bg-white px-4 py-3 shadow-sm hover:shadow-md hover:border-red-200 hover:bg-red-50/30 transition-all cursor-default';
               const icon = document.createElement('span');
               icon.className = 'shrink-0 text-base leading-none';
               icon.textContent = '🚫';
