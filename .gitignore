@@ -5,3 +5,6 @@ __pycache__/
 *.json
 *.jsonl
 .DS_Store
+*.bak
+*.backup
+scholarship_sources/
