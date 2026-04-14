@@ -7,7 +7,7 @@ from flask import Blueprint, request, jsonify
 from sqlalchemy import text
 
 from db import engine
-from criteria_utils import normalize_criteria_type, normalize_criteria_key, validate_criteria_key
+from criteria_utils import normalize_criteria_type, normalize_criteria_key, normalize_criteria_value, validate_criteria_key
 
 bp_detail = Blueprint('scholarship_detail', __name__)
 
@@ -35,6 +35,7 @@ def get_scholarship_detail(scholarship_id):
                     s.industry,
                     s.status,
                     s.requires_application,
+                    s.scholarship_type,
                     s.created_at,
                     o.id as organization_id,
                     o.name as organization_name,
@@ -110,6 +111,7 @@ def get_scholarship_detail(scholarship_id):
                 'industry': scholarship_row.industry,
                 'status': scholarship_row.status,
                 'requires_application': scholarship_row.requires_application,
+                'scholarship_type': scholarship_row.scholarship_type,
                 'created_at': scholarship_row.created_at.isoformat() if scholarship_row.created_at else None,
                 'organization': {
                     'id': scholarship_row.organization_id,
@@ -297,11 +299,12 @@ def create_scholarship():
                         if not validate_criteria_key(criteria_type, criteria_key):
                             trans.rollback()
                             return jsonify({'error': f'Invalid criteria_key for {criteria_type}'}), 400
+                        criteria_value = normalize_criteria_value(criteria_type, criteria_key, criteria['value'].strip())
                         criteria_params = {
                             'scholarship_id': scholarship_id,
                             'criteria_type': criteria_type,
                             'criteria_key': criteria_key,
-                            'required_value': criteria['value'].strip(),
+                            'required_value': criteria_value,
                             'is_required': bool(criteria.get('is_required', True)),
                             'inclusion_keywords': criteria.get('inclusion_keywords'),
                             'exclusion_keywords': criteria.get('exclusion_keywords')

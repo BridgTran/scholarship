@@ -85,13 +85,18 @@
                 />
               </div>
               <button
+                id="searchBtn"
                 type="submit"
-                class="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                class="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg id="searchBtnIcon" class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Find Scholarships
+                <svg id="searchBtnSpinner" class="mr-2 h-5 w-5 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                </svg>
+                <span id="searchBtnText">Find Scholarships</span>
               </button>
             </div>
           </div>
@@ -195,26 +200,31 @@
           </div>
 
           <!-- Advanced filters toggle -->
-          <div class="rounded-lg border border-gray-200 bg-white p-6">
+          <div class="rounded-lg border border-blue-100 bg-blue-50/40 p-6">
             <div class="flex items-center justify-between">
-              <div>
-                <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-900">Advanced Filters</h3>
-                <p class="mt-1 text-sm text-gray-500">Narrow your search with precise criteria</p>
+              <div class="flex items-center gap-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-900">Filter by Eligibility</h3>
+                    <span id="advancedFilterBadge" class="hidden inline-flex items-center rounded-full bg-blue-600 px-2 py-0.5 text-xs font-bold text-white"></span>
+                  </div>
+                  <p class="mt-1 text-sm text-gray-500">Narrow your results by gender, background, citizenship and more</p>
+                </div>
               </div>
               <button
                 type="button"
                 id="toggleAdvanced"
-                class="inline-flex items-center rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                class="inline-flex items-center rounded-lg bg-white border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 shadow-sm"
               >
-                <svg id="toggleIcon" class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <svg id="toggleIcon" class="mr-2 h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
                 </svg>
-                Show More
+                <span>Hide filters</span>
               </button>
             </div>
 
-            <!-- Advanced filters content -->
-            <div id="advancedFilters" class="mt-6 hidden space-y-6">
+            <!-- Advanced filters content (open by default) -->
+            <div id="advancedFilters" class="mt-6 space-y-6">
               <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div>
                   <label for="organization_type" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -311,10 +321,25 @@
           </div>
 
           <!-- Active filters display -->
-          <div id="activeFilters" class="rounded-lg border border-dashed border-gray-300 bg-gray-50/50 p-4 text-center">
-            <p class="text-sm text-gray-500">
-              <span class="font-medium text-gray-700">No filters applied.</span> Start by entering a keyword or selecting quick filters above.
-            </p>
+          <div id="activeFilters" class="rounded-lg border border-dashed border-gray-300 bg-gray-50/50 p-4">
+            <!-- Empty state -->
+            <div id="activeFiltersEmpty" class="text-center">
+              <p class="text-sm text-gray-500">
+                <span class="font-medium text-gray-700">No filters applied.</span> Start by entering a keyword or selecting quick filters above.
+              </p>
+            </div>
+            <!-- Active state: pills + clear-all button -->
+            <div id="activeFiltersActive" class="hidden flex-wrap items-center gap-2">
+              <span class="shrink-0 text-xs font-semibold uppercase tracking-wider text-gray-400">Filters:</span>
+              <div id="activeFilterPills" class="flex flex-1 flex-wrap gap-1.5"></div>
+              <button
+                id="clearAllFiltersInline"
+                type="button"
+                class="ml-auto shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+              >
+                ✕ Clear all filters
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -515,9 +540,17 @@
   const activeFilters = $("activeFilters");
 
   // ---------- UI state ----------
+  const searchBtn       = $("searchBtn");
+  const searchBtnText   = $("searchBtnText");
+  const searchBtnIcon   = $("searchBtnIcon");
+  const searchBtnSpinner = $("searchBtnSpinner");
+
   function setLoading(isLoading) {
-    if (!loadingState) return;
-    loadingState.classList.toggle("hidden", !isLoading);
+    if (loadingState) loadingState.classList.toggle("hidden", !isLoading);
+    if (searchBtn) searchBtn.disabled = isLoading;
+    if (searchBtnText)    searchBtnText.textContent = isLoading ? "Searching…" : "Find Scholarships";
+    if (searchBtnIcon)    searchBtnIcon.classList.toggle("hidden", isLoading);
+    if (searchBtnSpinner) searchBtnSpinner.classList.toggle("hidden", !isLoading);
   }
 
   function setError(isError) {
@@ -542,66 +575,140 @@
     if (!advancedFilters || !toggleAdvancedButton) return;
     const isHidden = advancedFilters.classList.contains("hidden");
     advancedFilters.classList.toggle("hidden", !isHidden);
-
-    // don't destroy the SVG: update only a nested span if present
     const span = toggleAdvancedButton.querySelector("span");
-    if (span) span.textContent = isHidden ? "Show less" : "Show more";
-    else toggleAdvancedButton.textContent = isHidden ? "Show less" : "Show more";
+    if (span) span.textContent = isHidden ? "Hide filters" : "Show filters";
+    const icon = $("toggleIcon");
+    if (icon) icon.style.transform = isHidden ? "" : "rotate(180deg)";
   }
 
   // ---------- filters pills ----------
+  const activeFiltersEmpty  = $("activeFiltersEmpty");
+  const activeFiltersActive = $("activeFiltersActive");
+  const activeFilterPills   = $("activeFilterPills");
+  const clearAllFiltersInline = $("clearAllFiltersInline");
+
+  function clearOneFilter(filterId, filterType) {
+    if (filterType === "checkbox") {
+      setChecked(filterId, false);
+    } else if (filterType === "industries") {
+      document.querySelectorAll('input[name="industries"]').forEach((i) => (i.checked = false));
+    } else {
+      setVal(filterId, "");
+    }
+    buildActiveFilterPills();
+    performSearch();
+  }
+
   function buildActiveFilterPills() {
     if (!activeFilters) return;
 
+    // pill objects: { label, id, type }
     const pills = [];
     const mappings = [
-      { id: "search", label: "Keyword" },
-      { id: "amount", label: "Amount" },
-      { id: "deadline", label: "Deadline" },
-      { id: "level_of_study", label: "Level" },
-      { id: "sort", label: "Sort" },
-      { id: "organization_type", label: "Org" },
-      { id: "gender", label: "Gender" },
-      { id: "background_factors", label: "Background" },
-      { id: "age_group", label: "Age" },
-      { id: "social_impact", label: "Impact" },
-      { id: "citizenship_status", label: "Citizenship" },
-      { id: "origin_region", label: "Region" }, // safe even if missing
+      { id: "search",            label: "Keyword",     type: "text" },
+      { id: "amount",            label: "Amount",      type: "select" },
+      { id: "deadline",          label: "Deadline",    type: "select" },
+      { id: "level_of_study",    label: "Level",       type: "select" },
+      { id: "scholarship_type",  label: "Type",        type: "select" },
+      { id: "year_of_study",     label: "Year",        type: "select" },
+      { id: "organization_type", label: "Org type",    type: "select" },
+      { id: "gender",            label: "Gender",      type: "select" },
+      { id: "background_factors",label: "Background",  type: "select" },
+      { id: "age_group",         label: "Age",         type: "select" },
+      { id: "social_impact",     label: "Impact",      type: "select" },
+      { id: "citizenship_status",label: "Citizenship", type: "select" },
+      { id: "origin_region",     label: "Region",      type: "select" },
     ];
 
     for (const item of mappings) {
       const v = val(item.id);
-      if (v) pills.push(`${item.label}: ${v}`);
+      if (v) pills.push({ label: `${item.label}: ${v}`, id: item.id, type: item.type });
     }
 
     const industryValues = Array.from(
       document.querySelectorAll('input[name="industries"]:checked')
-    )
-      .map((i) => i.value)
-      .filter(Boolean);
+    ).map((i) => i.value).filter(Boolean);
 
     if (industryValues.length) {
-      pills.push(
-        `Industries: ${industryValues.slice(0, 3).join(", ")}${
-          industryValues.length > 3 ? " +" + (industryValues.length - 3) : ""
-        }`
-      );
+      pills.push({
+        label: `Industries: ${industryValues.slice(0, 3).join(", ")}${industryValues.length > 3 ? " +" + (industryValues.length - 3) : ""}`,
+        id: "industries",
+        type: "industries",
+      });
     }
 
-    if (checked("recently_closed")) pills.push("Include recently closed");
-
-    if (!pills.length) {
-      activeFilters.textContent =
-        "No filters applied yet. Start with a keyword or quick filters.";
-      return;
+    if (checked("recently_closed")) {
+      pills.push({ label: "Recently closed", id: "recently_closed", type: "checkbox" });
     }
 
-    activeFilters.innerHTML = pills
-      .map(
-        (pill) =>
-          `<span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 shadow-sm">${pill}</span>`
-      )
-      .join(" ");
+    // Update advanced filter badge
+    const advancedIds = ["organization_type","gender","background_factors","age_group","social_impact","citizenship_status","origin_region"];
+    const advancedCount = advancedIds.filter((id) => !!val(id)).length
+      + document.querySelectorAll('input[name="industries"]:checked').length;
+    const badge = $("advancedFilterBadge");
+    if (badge) {
+      badge.textContent = advancedCount;
+      badge.classList.toggle("hidden", advancedCount === 0);
+    }
+
+    // Toggle empty vs active sub-divs
+    const hasFilters = pills.length > 0;
+    if (activeFiltersEmpty)  activeFiltersEmpty.classList.toggle("hidden", hasFilters);
+    if (activeFiltersActive) {
+      activeFiltersActive.classList.toggle("hidden", !hasFilters);
+      activeFiltersActive.classList.toggle("flex", hasFilters);
+    }
+
+    if (!hasFilters || !activeFilterPills) return;
+
+    // Render pill elements with individual ✕ buttons
+    activeFilterPills.innerHTML = "";
+    pills.forEach((pill) => {
+      const span = document.createElement("span");
+      span.className = "inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 pl-3 pr-1.5 py-1 text-[11px] font-semibold text-blue-700 shadow-sm";
+
+      const label = document.createElement("span");
+      label.textContent = pill.label;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "ml-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-blue-400 transition-colors hover:bg-blue-200 hover:text-blue-800";
+      removeBtn.setAttribute("aria-label", `Remove ${pill.label} filter`);
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        clearOneFilter(pill.id, pill.type);
+      });
+
+      span.appendChild(label);
+      span.appendChild(removeBtn);
+      activeFilterPills.appendChild(span);
+    });
+  }
+
+  function doResetAllFilters() {
+    setVal("search", "");
+    setVal("amount", "");
+    setVal("deadline", "");
+    setVal("organization_type", "");
+    setVal("sort", "deadline");
+    setChecked("recently_closed", false);
+    setVal("gender", "");
+    setVal("background_factors", "");
+    setVal("age_group", "");
+    setVal("social_impact", "");
+    setVal("level_of_study", "");
+    setVal("citizenship_status", "");
+    setVal("origin_region", "");
+    setVal("scholarship_type", "");
+    setVal("year_of_study", "");
+    document.querySelectorAll('input[name="industries"]').forEach((i) => (i.checked = false));
+    buildActiveFilterPills();
+    performSearch();
+  }
+
+  if (clearAllFiltersInline) {
+    clearAllFiltersInline.addEventListener("click", doResetAllFilters);
   }
 
   function hasAdvancedFilters() {
@@ -621,6 +728,16 @@
   }
 
   // ---------- formatting ----------
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function formatMoney(amount) {
     if (amount === null || amount === undefined || amount === "") return "N/A";
     const n = Number(amount);
@@ -637,10 +754,10 @@
   }
 
   function formatDate(isoDate) {
-    if (!isoDate) return "Deadline not listed";
+    if (!isoDate) return null;
     const d = new Date(isoDate);
-    if (Number.isNaN(d.getTime())) return "Deadline not listed";
-    return d.toLocaleDateString("en-US", {
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleDateString("en-AU", {
       month: "long",
       day: "2-digit",
       year: "numeric",
@@ -658,18 +775,18 @@
 
   function urgencyBadge(days) {
     if (days === null) {
-      return '<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">Deadline not listed</span>';
+      return '<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500">Open intake</span>';
     }
     if (days < 0) {
       const closedDays = Math.abs(days);
-      return `<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">Closed ${closedDays} days ago</span>`;
+      return `<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500">Closed ${closedDays} days ago</span>`;
     }
     if (days <= 7) {
-      return `<span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">${days} days left</span>`;
+      return `<span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">⚠ ${days} days left</span>`;
     }
-      if (days <= 30) {
-        return `<span class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">${days} days left</span>`;
-      }
+    if (days <= 30) {
+      return `<span class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">⚠ ${days} days left</span>`;
+    }
     return `<span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">${days} days left</span>`;
   }
 
@@ -700,7 +817,7 @@ function renderResults(scholarships) {
 
     const orgName = scholarship.organization_name || "";
     const awardAmount = formatAmountDisplay(scholarship);
-    const deadlineText = formatDate(scholarship.deadline);
+    const deadlineText = formatDate(scholarship.deadline);  // null if no deadline
     const urgency = urgencyBadge(days);
 
     card.innerHTML = `
@@ -712,7 +829,7 @@ function renderResults(scholarships) {
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="space-y-2">
             <h3 class="text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
-              ${scholarship.title || ""}
+              ${escapeHtml(scholarship.title || "")}
             </h3>
             ${
               orgName
@@ -720,15 +837,15 @@ function renderResults(scholarships) {
                     <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
-                    ${orgName}
+                    ${escapeHtml(orgName)}
                   </div>`
                 : ""
             }
           </div>
-          
+
           <!-- Award amount - minimal display -->
           <div class="text-right">
-            <p class="text-xs font-medium text-gray-900">${awardAmount}</p>
+            <p class="text-xs font-medium text-gray-900">${escapeHtml(awardAmount)}</p>
             <p class="text-xs text-gray-500">Award</p>
           </div>
         </div>
@@ -736,18 +853,22 @@ function renderResults(scholarships) {
         <!-- Description -->
         ${
           shortDescription
-            ? `<p class="mt-3 text-sm text-gray-600 leading-relaxed">${shortDescription}</p>`
+            ? `<p class="mt-3 text-sm text-gray-600 leading-relaxed">${escapeHtml(shortDescription)}</p>`
             : ""
         }
 
         <!-- Metadata line -->
         <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500">
           <!-- Deadline -->
-          <div class="flex items-center gap-1.5">
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="flex items-center gap-1.5 ${
+            days !== null && days <= 7  ? 'text-rose-600 font-semibold' :
+            days !== null && days <= 30 ? 'text-orange-600 font-semibold' :
+            ''
+          }">
+            <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
-            ${deadlineText}
+            ${deadlineText ? `<span class="font-medium">Apply by:</span> ${escapeHtml(deadlineText)}` : '<span class="text-gray-400">Open intake</span>'}
           </div>
 
           <!-- Study Level (if available) -->
@@ -758,7 +879,7 @@ function renderResults(scholarships) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
                   </svg>
-                  ${scholarship.level_of_study}
+                  ${escapeHtml(scholarship.level_of_study)}
                 </div>`
               : ""
           }
@@ -767,7 +888,7 @@ function renderResults(scholarships) {
           ${
             scholarship.type
               ? `<div class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700">
-                  ${scholarship.type}
+                  ${escapeHtml(scholarship.type)}
                 </div>`
               : ""
           }
@@ -979,14 +1100,6 @@ function getDaysTextCompact(days) {
 
     buildActiveFilterPills();
 
-    if (hasAdvancedFilters() && advancedFilters) {
-      advancedFilters.classList.remove("hidden");
-      if (toggleAdvancedButton) {
-        const span = toggleAdvancedButton.querySelector("span");
-        if (span) span.textContent = "Show less";
-        else toggleAdvancedButton.textContent = "Show less";
-      }
-    }
   }
 
   // ---------- main search ----------
@@ -995,6 +1108,7 @@ function getDaysTextCompact(days) {
     setError(false);
     setEmpty(false);
     setResultsHeader(false, 0);
+    buildActiveFilterPills();
 
     const apiParams = buildApiParams();
     syncUrlToForm();
@@ -1019,6 +1133,9 @@ function getDaysTextCompact(days) {
         }
 
         renderResults(scholarships);
+        if (resultsHeader) {
+          setTimeout(() => resultsHeader.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+        }
       })
       .catch((err) => {
         console.error("Search error:", err);
@@ -1162,33 +1279,7 @@ function getDaysTextCompact(days) {
       })
     );
 
-  on(clearFiltersButton, "click", () => {
-    setVal("search", "");
-    setVal("amount", "");
-    setVal("deadline", "");
-    setVal("organization_type", "");
-    setVal("sort", "deadline");
-    setChecked("recently_closed", false);
-    setVal("gender", "");
-    setVal("background_factors", "");
-    setVal("age_group", "");
-    setVal("social_impact", "");
-    setVal("level_of_study", "");
-    setVal("citizenship_status", "");
-    setVal("origin_region", "");
-
-    document.querySelectorAll('input[name="industries"]').forEach((i) => (i.checked = false));
-
-    if (advancedFilters) advancedFilters.classList.add("hidden");
-
-    if (toggleAdvancedButton) {
-      const span = toggleAdvancedButton.querySelector("span");
-      if (span) span.textContent = "Show more";
-      else toggleAdvancedButton.textContent = "Show more";
-    }
-
-    performSearch();
-  });
+  on(clearFiltersButton, "click", doResetAllFilters);
 
   window.addEventListener("popstate", () => {
     applyQueryParams();

@@ -66,49 +66,56 @@
           <!-- Main content -->
           <div id="main-content" class="hidden space-y-8">
             <!-- Hero card -->
-            <div class="rounded-2xl border border-gray-200/60 bg-white/80 p-8 shadow-xl backdrop-blur-sm lg:p-10">
-              <div class="mb-6 flex items-center justify-between">
-                <a href="/scholarship_search" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  All Scholarships
-                </a>
-                <div class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-blue-700 ring-1 ring-inset ring-blue-100">
-                  <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
-                  Live Details
+            <div class="overflow-hidden rounded-2xl border border-gray-200/60 shadow-xl backdrop-blur-sm">
+              <!-- Gradient title banner -->
+              <div class="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 px-8 pb-10 pt-8 lg:px-10 lg:pt-10">
+                <div class="mb-5 flex items-center justify-between">
+                  <a href="/scholarship_search" class="inline-flex items-center gap-2 text-sm text-blue-100 transition-colors hover:text-white">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    All Scholarships
+                  </a>
+                  <div class="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+                    <div class="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>
+                    Live Details
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-start gap-3">
+                  <h1 id="scholarship-title" class="text-3xl font-bold tracking-tight text-white sm:text-4xl"></h1>
+                  <div id="scholarship-type-badge" class="hidden"></div>
                 </div>
               </div>
-
-              <h1 id="scholarship-title" class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"></h1>
 
               <!-- Quick facts -->
-              <div class="mt-8 grid gap-6 sm:grid-cols-2">
-                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                  <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Funding Amount</p>
-                  <span id="scholarship-amount" class="mt-2 block text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent"></span>
-                  <p id="scholarship-amount-note" class="mt-1 text-xs text-gray-500"></p>
-                </div>
-                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                  <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Application Deadline</p>
-                  <span id="scholarship-deadline" class="mt-2 block text-xl font-semibold text-gray-900"></span>
-                </div>
-              </div>
-
-              <!-- Organization -->
-              <div id="organization-section" class="mt-8 hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Offered by</p>
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div class="space-y-1">
-                    <span id="org-name" class="text-lg font-semibold text-gray-900"></span>
-                    <span id="org-type" class="text-sm text-gray-600"></span>
+              <div class="bg-white/80 px-8 py-8 lg:px-10">
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-6 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">💰 Funding Amount</p>
+                    <span id="scholarship-amount" class="mt-2 block text-3xl font-bold text-emerald-600"></span>
+                    <p id="scholarship-amount-note" class="mt-1 text-xs text-gray-500"></p>
                   </div>
-                  <a id="org-website" href="#" target="_blank" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700">
-                    Visit Website
-                    <svg class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
+                  <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">📅 Apply by</p>
+                    <span id="scholarship-deadline" class="mt-2 block text-xl font-semibold text-gray-900"></span>
+                  </div>
+                </div>
+
+                <!-- Organization -->
+                <div id="organization-section" class="mt-4 hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <p class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-500">Offered by</p>
+                  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="space-y-1">
+                      <span id="org-name" class="text-lg font-semibold text-gray-900"></span>
+                      <span id="org-type" class="text-sm text-gray-600"></span>
+                    </div>
+                    <a id="org-website" href="#" target="_blank" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700">
+                      Visit Website
+                      <svg class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -121,10 +128,7 @@
 
             <!-- Eligibility -->
             <div class="rounded-2xl border border-gray-200/60 bg-white/80 p-8 shadow-xl backdrop-blur-sm">
-              <div class="flex flex-col gap-1">
-                <h2 class="text-xl font-bold text-gray-900">Eligibility</h2>
-                <p class="text-sm text-gray-600">Single-column checklist for quick review.</p>
-              </div>
+              <h2 class="text-xl font-bold text-gray-900">Eligibility</h2>
 
               <div id="eligibility-sections" class="mt-8 flex flex-col gap-5"></div>
 
@@ -272,6 +276,15 @@
         });
       }
 
+      function safeUrl(url) {
+        if (!url || typeof url !== 'string') return null;
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return url;
+        } catch (e) {}
+        return null;
+      }
+
       function getScholarshipId() {
         const pathParts = window.location.pathname.split('/').filter(Boolean);
         const lastPart = pathParts[pathParts.length - 1];
@@ -289,6 +302,21 @@
       function renderScholarship(scholarship) {
         document.title = `${scholarship.title} - Scholarship Details`;
         document.getElementById('scholarship-title').textContent = scholarship.title || 'Scholarship Title';
+
+        const typeEl = document.getElementById('scholarship-type-badge');
+        const badges = {
+          'Merit-Based':    { emoji: '🏆', color: 'from-yellow-500 to-amber-500',  label: 'Merit-Based' },
+          'Need-Based':     { emoji: '💰', color: 'from-blue-500 to-purple-500',   label: 'Need-Based' },
+          'Merit-And-Need': { emoji: '⭐', color: 'from-green-500 to-emerald-500', label: 'Merit & Need' }
+        };
+        const badge = badges[scholarship.scholarship_type];
+        if (badge) {
+          typeEl.innerHTML = `<span class="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${badge.color} px-3 py-1 text-xs font-semibold text-white shadow-sm"><span>${badge.emoji}</span><span>${badge.label}</span></span>`;
+          typeEl.classList.remove('hidden');
+        } else {
+          typeEl.classList.add('hidden');
+        }
+
         document.getElementById('scholarship-amount').textContent = formatAmountDisplay(scholarship);
         document.getElementById('scholarship-deadline').textContent = formatDate(scholarship.deadline);
         document.getElementById('scholarship-description').textContent = scholarship.description || '';
@@ -299,8 +327,9 @@
           document.getElementById('org-name').textContent = scholarship.organization.name || '';
           document.getElementById('org-type').textContent = scholarship.organization.type || '';
           const website = document.getElementById('org-website');
-          if (scholarship.organization.website) {
-            website.href = scholarship.organization.website;
+          const safeWebsite = safeUrl(scholarship.organization.website);
+          if (safeWebsite) {
+            website.href = safeWebsite;
             website.classList.remove('hidden');
           } else {
             website.classList.add('hidden');
@@ -309,7 +338,7 @@
           organizationSection.classList.add('hidden');
         }
 
-        // Eligibility rendering - modern grouped cards
+        // Eligibility rendering - flat checklist design
         const eligibilitySections = document.getElementById('eligibility-sections');
         const eligibilityEmpty = document.getElementById('eligibility-empty');
         eligibilitySections.innerHTML = '';
@@ -329,269 +358,481 @@
           : [];
 
         function formatCriteriaLabel(criteriaType, baseKey) {
-          if (criteriaType === 'academic_level' && baseKey === 'level') {
-            return 'Level';
-          }
-          if (criteriaType === 'academic_level' && baseKey === 'prior_education') {
-            return 'Prior education';
-          }
-          if (criteriaType === 'academic_level' && ['year', 'year_of_study', 'study_year'].includes(baseKey)) {
-            return 'Year of study';
-          }
-          if (criteriaType === 'other' && baseKey === 'study_load') {
-            return 'Study load';
-          }
-          if (criteriaType === 'other' && baseKey === 'fee_status') {
-            return 'Fee status';
-          }
-          if (criteriaType === 'demographic' && baseKey === 'residency_status') {
-            return 'Residency';
-          }
-          if (criteriaType === 'demographic' && baseKey === 'origin_region') {
-            return 'Origin region';
-          }
-          if (criteriaType === 'demographic' && baseKey === 'citizenship') {
-            return 'Citizenship';
-          }
-          return String(criteriaType || '').replace(/_/g, ' ');
+          const KEY_LABELS = {
+            level:               'Level',
+            degree_level:        'Degree level',
+            prior_education:     'Prior education',
+            year_of_study:       'Year of study',
+            year:                'Year of study',
+            study_year:          'Year of study',
+            study_load:          'Study load',
+            study_mode:          'Study mode',
+            enrollment_status:   'Enrollment status',
+            degree_status:       'Degree status',
+            degree_type:         'Degree type',
+            degree_completion:   'Degree completion',
+            fee_status:          'Fee status',
+            residency_status:    'Residency',
+            origin_region:       'Origin region',
+            citizenship:         'Citizenship',
+            nationality:         'Nationality',
+            gender:              'Gender',
+            age_group:           'Age group',
+            alumni_status:       'Alumni status',
+            minimum_gpa:         'Minimum GPA',
+            academic_standing:   'Academic standing',
+            study_state:         'State',
+            study_country:       'Country',
+            home_state:          'Home state',
+            eligible_regions:    'Eligible regions',
+            institution:         'Institution',
+            manual_review_note:  'Note',
+            income_threshold:    'Income threshold',
+            means_tested:        'Means tested',
+            community_involvement: 'Community involvement',
+            leadership:          'Leadership',
+            sport:               'Sport',
+            visa_status:         'Visa status',
+            disability:          'Disability',
+            employment_status:   'Employment status',
+            indigenous_status:   'Indigenous status',
+            background:          'Background',
+          };
+          return KEY_LABELS[baseKey] || String(baseKey || criteriaType || '').replace(/_/g, ' ');
         }
 
         function formatCriteriaValue(criteriaType, baseKey, value) {
-          if (criteriaType === 'demographic' && baseKey === 'residency_status') {
-            const mapping = {
-              INTERNATIONAL: 'International student',
-              CITIZEN: 'Australian citizen',
-              PR: 'Permanent resident',
-              CITIZEN_OR_PR: 'Citizen or PR'
-            };
-            return mapping[value] || value;
-          }
-          if (criteriaType === 'demographic' && baseKey === 'origin_region') {
-            const mapping = {
-              NORTH_ASIA: 'North Asia',
-              SOUTHEAST_ASIA: 'South East Asia'
-            };
-            return mapping[value] || value;
-          }
-          if (criteriaType === 'demographic' && baseKey === 'citizenship') {
-            const mapping = {
-              AU: 'Australian citizen',
-              NZ: 'New Zealand citizen'
-            };
-            return mapping[value] || value;
-          }
-          if (criteriaType === 'academic_level' && baseKey === 'level') {
+          // ── Academic level ────────────────────────────────────────────────
+          if (criteriaType === 'academic_level' && ['level', 'degree_level'].includes(baseKey)) {
             const mapping = {
               UNDERGRADUATE: 'Undergraduate',
-              POSTGRADUATE: 'Postgraduate',
-              HDR: 'Higher Degree Research (HDR)'
+              POSTGRADUATE:  'Postgraduate',
+              HDR:           'Higher Degree Research (HDR)',
+              PHD:           'PhD / Doctorate',
+              MASTERS:       'Masters',
+              HONOURS:       'Honours',
+              DIPLOMA:       'Diploma',
+              CERTIFICATE:   'Certificate',
+              COMMENCING:    'Commencing Students',
+              CONTINUING:    'Continuing Students',
+            };
+            return mapping[value] || value;
+          }
+          if (criteriaType === 'academic_level' && baseKey === 'enrollment_status') {
+            const mapping = {
+              COMMENCING: 'Commencing Students',
+              CONTINUING: 'Continuing Students',
             };
             return mapping[value] || value;
           }
           if (criteriaType === 'academic_level' && ['year', 'year_of_study', 'study_year'].includes(baseKey)) {
             const mapping = {
-              YEAR_1: '1st year',
-              YEAR_2: '2nd year',
-              YEAR_3: '3rd year',
-              YEAR_4: '4th year',
-              FINAL_YEAR: 'Final year',
-              FIRST_YEAR: '1st year',
-              SECOND_YEAR: '2nd year',
-              THIRD_YEAR: '3rd year',
-              FOURTH_YEAR: '4th year'
+              YEAR_1:       '1st Year',
+              YEAR_2:       '2nd Year',
+              YEAR_3:       '3rd Year',
+              YEAR_4:       '4th Year',
+              FINAL_YEAR:   'Final Year',
+              FIRST_YEAR:   '1st Year',
+              SECOND_YEAR:  '2nd Year',
+              THIRD_YEAR:   '3rd Year',
+              FOURTH_YEAR:  '4th Year',
             };
             if (mapping[value]) return mapping[value];
-            if (/^\d+$/.test(value)) return `${value} year`;
+            if (/^\d+$/.test(value)) return `Year ${value}`;
             return value;
           }
           if (criteriaType === 'academic_level' && baseKey === 'prior_education') {
             const mapping = {
-              AU_YEAR_12: 'Completed Australian Year 12'
+              AU_YEAR_12: 'Completed Australian Year 12',
             };
             return mapping[value] || value;
           }
-          if (criteriaType === 'other' && baseKey === 'study_load') {
+
+          // ── Study load & mode ─────────────────────────────────────────────
+          if (baseKey === 'study_load') {
             const mapping = {
-              FULL_TIME: 'Full-time',
-              PART_TIME: 'Part-time'
+              FULL_TIME:    'Full Time',
+              PART_TIME:    'Part Time',
+              PART_TIME_75: '75% Load',
+              PART_TIME_50: '50% Load',
+              PART_TIME_25: '25% Load',
             };
             return mapping[value] || value;
           }
-          if (criteriaType === 'other' && baseKey === 'fee_status') {
+          if (baseKey === 'study_mode') {
             const mapping = {
-              FULL_FEE: 'Full-fee paying'
+              ON_CAMPUS: 'On Campus',
+              ONLINE:    'Online',
+              HYBRID:    'Hybrid / Blended',
             };
             return mapping[value] || value;
           }
+
+          // ── Demographic ───────────────────────────────────────────────────
+          if (baseKey === 'residency_status') {
+            const mapping = {
+              INTERNATIONAL:      'International Student',
+              DOMESTIC:           'Domestic Student',
+              CITIZEN:            'Australian Citizen',
+              PR:                 'Permanent Resident',
+              PR_AU:              'Permanent Resident (AU)',
+              PERMANENT_RESIDENT: 'Permanent Resident',
+              CITIZEN_OR_PR:      'Citizen or Permanent Resident',
+            };
+            return mapping[value] || value;
+          }
+          if (baseKey === 'citizenship') {
+            const mapping = {
+              AU: 'Australian citizen',
+              NZ: 'New Zealand citizen',
+            };
+            return mapping[value] || value;
+          }
+          if (baseKey === 'origin_region') {
+            const mapping = {
+              NORTH_ASIA:     'North Asia',
+              SOUTHEAST_Asia: 'South-East Asia',
+              SOUTHEAST_ASIA: 'South-East Asia',
+              EUROPE:         'Europe',
+              NORTH_AMERICA:  'North America',
+              SOUTH_AMERICA:  'South America',
+              CENTRAL_AMERICA:'Central America',
+              AFRICA:         'Africa',
+              MIDDLE_EAST:    'Middle East',
+              SOUTH_ASIA:     'South Asia',
+              CENTRAL_ASIA:   'Central Asia',
+              OCEANIA:        'Oceania',
+            };
+            return mapping[value] || value;
+          }
+
+          // ── Fee status ────────────────────────────────────────────────────
+          if (baseKey === 'fee_status') {
+            const mapping = {
+              FULL_FEE:     'Full-fee paying',
+              ONLINE_DEGREE: 'Online Degree',
+            };
+            return mapping[value] || value;
+          }
+
           return value;
         }
 
-        const groupedCriteria = new Map();
-        criteriaItems.forEach((criteria) => {
-          const criteriaType = criteria.criteria_type || criteria.type || '';
-          const criteriaKey = criteria.criteria_key || criteria.key || '';
-          const criteriaValue = criteria.required_value || criteria.value || '';
-          const inclusionKeywords = criteria.inclusion_keywords || '';
-          const exclusionKeywords = criteria.exclusion_keywords || '';
-          if (!criteriaType || !criteriaValue) {
-            return;
+        // ── Helper ────────────────────────────────────────────────────────────
+        function joinOr(arr) {
+          const u = [...new Set(arr)];
+          if (u.length === 0) return '';
+          if (u.length === 1) return u[0];
+          return u.slice(0, -1).join(', ') + ' or ' + u[u.length - 1];
+        }
+
+        // ── Step 1: Bucket all rows into includedMap / excludedMap ────────────
+        // Grouped by baseKey (without _excluded suffix) so values for the same
+        // concept always land in one place regardless of criteria_type.
+        const includedMap = new Map(); // baseKey → { label, criteriaType, values[] }
+        const excludedMap = new Map(); // baseKey → { label, criteriaType, values[] }
+
+        criteriaItems.forEach((c) => {
+          const criteriaType = c.criteria_type || c.type || '';
+          const criteriaKey  = c.criteria_key  || c.key  || '';
+          const rawValue     = c.required_value || c.value || '';
+          if (!criteriaType || !rawValue) return;
+
+          const isExcluded = criteriaKey.endsWith('_excluded') || criteriaKey.endsWith('_exclusion');
+          const baseKey    = isExcluded
+            ? criteriaKey.replace(/_(excluded|exclusion)$/, '')
+            : criteriaKey;
+          const formatted  = formatCriteriaValue(criteriaType, baseKey, rawValue);
+          const label      = formatCriteriaLabel(criteriaType, baseKey);
+          const target     = isExcluded ? excludedMap : includedMap;
+
+          if (!target.has(baseKey)) {
+            target.set(baseKey, { label, criteriaType, values: [] });
           }
-          const isExcluded = criteriaKey && (criteriaKey.endsWith('_excluded') || criteriaKey.endsWith('_exclusion'));
-          const baseKey = isExcluded ? criteriaKey.replace(/_(excluded|exclusion)$/, '') : criteriaKey;
-          const groupKey = `${criteriaType}::${criteriaKey}`;
-          const isRequiredRaw = criteria.is_required;
-          const isRequired = isRequiredRaw === true || isRequiredRaw === 1 || isRequiredRaw === '1';
-          if (!groupedCriteria.has(groupKey)) {
-            groupedCriteria.set(groupKey, {
-              label: formatCriteriaLabel(criteriaType, baseKey),
-              criteria_type: criteriaType,
-              criteria_key: criteriaKey,
-              base_key: baseKey,
-              is_excluded: isExcluded,
-              values: [],
-              is_required: isRequired,
-              inclusion_keywords: [],
-              exclusion_keywords: []
-            });
-          } else if (isRequired) {
-            groupedCriteria.get(groupKey).is_required = true;
+          const group = target.get(baseKey);
+          if (!group.values.includes(formatted)) group.values.push(formatted);
+        });
+
+        // ── Step 2: Deduplicate level / degree_level if values are identical ──
+        if (includedMap.has('level') && includedMap.has('degree_level')) {
+          const a = [...includedMap.get('level').values].sort().join('|');
+          const b = [...includedMap.get('degree_level').values].sort().join('|');
+          if (a === b) includedMap.delete('degree_level');
+        }
+
+        // ── Step 3: Build requirement lines with smart merging ────────────────
+        // Each item is { text: string, emoji: string } for per-line icon support
+        const requirementLines = [];
+        const summaryParts     = []; // plain strings for the summary chips
+
+        // consume(key) removes and returns the group, or null if absent
+        function consume(key) {
+          const g = includedMap.get(key);
+          includedMap.delete(key);
+          return g || null;
+        }
+
+        function addReq(text, emoji) {
+          requirementLines.push({ text, emoji: emoji || '📋' });
+        }
+
+        function keyEmoji(baseKey, values) {
+          const v0 = ((values && values[0]) || '').toLowerCase();
+          if (['citizenship', 'residency_status', 'nationality', 'origin_region'].includes(baseKey)) return '🌏';
+          if (['degree_level', 'level', 'enrollment_status', 'prior_education'].includes(baseKey)) return '🎓';
+          if (['year_of_study', 'year', 'study_year'].includes(baseKey)) return '📚';
+          if (baseKey === 'gender') {
+            if (v0.includes('female') || v0.includes('women') || v0.includes('woman')) return '👩';
+            if (v0.includes('male') || v0.includes('men') || v0.includes('man')) return '👨';
+            return '👤';
           }
-          groupedCriteria.get(groupKey).values.push(
-            formatCriteriaValue(criteriaType, baseKey, criteriaValue)
+          if (['income_threshold', 'means_tested', 'financial_need'].includes(baseKey)) return '💰';
+          if (['minimum_gpa', 'academic_standing'].includes(baseKey)) return '⭐';
+          if (['discipline', 'major', 'field', 'field_of_study'].includes(baseKey)) return '🔬';
+          if (baseKey === 'institution') return '🏛️';
+          if (['study_state', 'study_country', 'home_state', 'location'].includes(baseKey)) return '📍';
+          if (baseKey === 'study_load') return '⏰';
+          if (baseKey === 'study_mode') return '💻';
+          if (baseKey === 'age') return '🎂';
+          if (baseKey === 'disability') return '♿';
+          if (baseKey === 'indigenous_status') return '🌿';
+          if (baseKey === 'employment_status') return '💼';
+          if (['community_involvement', 'leadership'].includes(baseKey)) return '🤝';
+          if (baseKey === 'sport') return '🏅';
+          if (baseKey === 'visa_status') return '🛂';
+          return '📋';
+        }
+
+        // — Who: merge residency_status + nationality into one natural line
+        const residencyGroup   = consume('residency_status');
+        const nationalityGroup = consume('nationality');
+        if (residencyGroup && nationalityGroup) {
+          const isIntl = residencyGroup.values.some(v => v.toLowerCase().includes('international'));
+          const natText = joinOr(nationalityGroup.values);
+          const line = isIntl
+            ? `International student from ${natText}`
+            : `${joinOr(residencyGroup.values)}, from ${natText}`;
+          addReq(line, '🌏');
+          summaryParts.push(line);
+        } else if (residencyGroup) {
+          const line = joinOr(residencyGroup.values);
+          addReq(line, '🌏');
+          summaryParts.push(line);
+        } else if (nationalityGroup) {
+          const line = `From ${joinOr(nationalityGroup.values)}`;
+          addReq(line, '🌏');
+          summaryParts.push(line);
+        }
+
+        // — What level: merge enrollment_status + level/degree_level
+        //   e.g. "Commencing Students" + "Undergraduate" → "Commencing undergraduate"
+        const enrollGroup = consume('enrollment_status');
+        const levelGroup  = consume('level') || consume('degree_level');
+        if (enrollGroup && levelGroup) {
+          const combined = enrollGroup.values.flatMap(e =>
+            levelGroup.values.map(l =>
+              `${e.replace(/ Students?$/i, '')} ${l.toLowerCase()}`
+            )
           );
-          if (inclusionKeywords) {
-            inclusionKeywords.split(',').forEach((kw) => {
-              const trimmed = kw.trim();
-              if (trimmed) {
-                groupedCriteria.get(groupKey).inclusion_keywords.push(trimmed);
-              }
-            });
-          }
-          if (exclusionKeywords) {
-            exclusionKeywords.split(',').forEach((kw) => {
-              const trimmed = kw.trim();
-              if (trimmed) {
-                groupedCriteria.get(groupKey).exclusion_keywords.push(trimmed);
-              }
-            });
+          const line = joinOr(combined);
+          addReq(line, '🎓');
+          summaryParts.push(line);
+        } else if (enrollGroup) {
+          const line = joinOr(enrollGroup.values);
+          addReq(line, '🎓');
+          summaryParts.push(line);
+        } else if (levelGroup) {
+          const line = joinOr(levelGroup.values);
+          addReq(line, '🎓');
+          summaryParts.push(line);
+        }
+
+        // — Year of study
+        const yearGroup = consume('year_of_study') || consume('year') || consume('study_year');
+        if (yearGroup) {
+          addReq(joinOr(yearGroup.values), '📚');
+        }
+
+        // — Study load and mode as separate rows with distinct emojis
+        const loadGroup = consume('study_load');
+        const modeGroup = consume('study_mode');
+        if (loadGroup) {
+          const line = joinOr(loadGroup.values);
+          addReq(line, '⏰');
+          summaryParts.push(line);
+        }
+        if (modeGroup) {
+          const line = joinOr(modeGroup.values);
+          addReq(line, '💻');
+          summaryParts.push(line);
+        }
+
+        // — Location: state + country
+        const stateGroup   = consume('study_state');
+        const countryGroup = consume('study_country');
+        if (stateGroup && countryGroup) {
+          const loc = `${joinOr(stateGroup.values)}, ${joinOr(countryGroup.values)}`;
+          addReq(`Studying in ${loc}`, '📍');
+          summaryParts.push(loc);
+        } else if (stateGroup) {
+          const line = joinOr(stateGroup.values);
+          addReq(`Studying in ${line}`, '📍');
+          summaryParts.push(line);
+        } else if (countryGroup) {
+          const line = joinOr(countryGroup.values);
+          addReq(`Studying in ${line}`, '📍');
+          summaryParts.push(line);
+        }
+
+        // — GPA
+        const gpaGroup = consume('minimum_gpa');
+        if (gpaGroup) {
+          addReq(`Minimum GPA of ${joinOr(gpaGroup.values)}`, '⭐');
+        }
+
+        // — Prior education (raw text — show as-is)
+        const priorEdGroup = consume('prior_education');
+        if (priorEdGroup) {
+          priorEdGroup.values.forEach(v => addReq(v, '🎓'));
+        }
+
+        // — Institution: one row per institution (not joined)
+        const institutionGroup = consume('institution');
+        if (institutionGroup) {
+          institutionGroup.values.forEach(v => addReq(`At ${v}`, '🏛️'));
+        }
+
+        // — Field of study
+        const fieldGroup = consume('discipline') || consume('major')
+                        || consume('field')      || consume('field_of_study');
+        if (fieldGroup) {
+          addReq(joinOr(fieldGroup.values), '🔬');
+        }
+
+        // — Financial need
+        const incomeGroup = consume('income_threshold');
+        const meansGroup  = consume('means_tested');
+        if (incomeGroup) addReq(joinOr(incomeGroup.values), '💰');
+        if (meansGroup)  addReq(joinOr(meansGroup.values), '💰');
+
+        // — Everything else (gender, age, background, extracurricular, etc.)
+        includedMap.forEach((group, baseKey) => {
+          if (group.values.length) {
+            addReq(joinOr(group.values), keyEmoji(baseKey, group.values));
           }
         });
 
-        function getSectionName(criteriaType) {
-          if (criteriaType === 'academic_level') return 'Academic';
-          if (criteriaType === 'demographic') return 'Demographic';
-          return 'Enrollment';
-        }
+        // ── Step 4: Build exclusion lines in natural language ──────────────────
+        const exclusionLines = [];
 
-        const sectionData = new Map([
-          ['Academic', { icon: '🎓', eligible: [], excluded: [] }],
-          ['Demographic', { icon: '🌍', eligible: [], excluded: [] }],
-          ['Enrollment', { icon: '🎒', eligible: [], excluded: [] }]
-        ]);
-
-        groupedCriteria.forEach((group) => {
-          const sectionName = getSectionName(group.criteria_type);
-          const target = sectionData.get(sectionName) || sectionData.get('Enrollment');
-          if (group.is_excluded) {
-            target.excluded.push(group);
+        excludedMap.forEach((group, baseKey) => {
+          if (!group.values.length) return;
+          const vals = group.values;
+          if (baseKey === 'citizenship') {
+            exclusionLines.push(`You are ${joinOr(vals)}`);
+          } else if (baseKey === 'residency_status') {
+            exclusionLines.push(`You are a ${joinOr(vals)}`);
+          } else if (baseKey === 'fee_status') {
+            vals.forEach(v => exclusionLines.push(
+              v === 'Online Degree' ? 'Enrolled in an online degree' : v
+            ));
+          } else if (baseKey === 'study_mode') {
+            exclusionLines.push(`Studying ${joinOr(vals).toLowerCase()}`);
+          } else if (baseKey === 'study_load') {
+            exclusionLines.push(`${joinOr(vals)} student`);
+          } else if (baseKey === 'level' || baseKey === 'degree_level') {
+            exclusionLines.push(`${joinOr(vals)} student`);
           } else {
-            target.eligible.push(group);
+            exclusionLines.push(`${group.label}: ${joinOr(vals)}`);
           }
         });
 
-        function buildBadge(text, color) {
-          const badge = document.createElement('span');
-          badge.className = `inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${color}`;
-          badge.textContent = text;
-          return badge;
-        }
+        // ── Step 5: Render ─────────────────────────────────────────────────────
+        const hasAny = requirementLines.length > 0 || exclusionLines.length > 0;
 
-        function renderItem(group, isExcluded) {
-          const item = document.createElement('li');
-          item.className = 'group flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50/70 px-4 py-3 shadow-sm transition-transform hover:-translate-y-0.5';
-
-          let criteriaValue = group.values.join(', ');
-          if (group.criteria_type === 'other' && group.base_key === 'study_load') {
-            const hasFullTime = group.values.includes('Full-time');
-            const hasPartTime = group.values.includes('Part-time');
-            if (hasFullTime && hasPartTime) {
-              criteriaValue = 'Full-time or Part-time';
-            }
-          }
-
-          const status = document.createElement('span');
-          status.className = `mt-1 inline-flex shrink-0 items-center justify-center text-sm font-bold ${isExcluded ? 'text-red-600' : 'text-[#10b981]'} transition-transform`;
-          status.style.transform = 'scale(0.9)';
-          status.style.marginRight = '4px';
-          status.textContent = isExcluded ? '✖' : '✓';
-          status.addEventListener('mouseenter', () => { status.style.transform = 'scale(1)'; status.style.transition = 'transform 0.2s ease'; });
-          status.addEventListener('mouseleave', () => { status.style.transform = 'scale(0.9)'; status.style.transition = 'transform 0.2s ease'; });
-
-          const content = document.createElement('div');
-          content.className = 'flex-1 space-y-1';
-
-          const valueLine = document.createElement('p');
-          valueLine.className = 'text-sm text-gray-800';
-          valueLine.textContent = criteriaValue;
-          content.appendChild(valueLine);
-
-          const inclusionList = Array.from(new Set(group.inclusion_keywords));
-          const exclusionList = Array.from(new Set(group.exclusion_keywords));
-          if (inclusionList.length || exclusionList.length) {
-            const meta = document.createElement('p');
-            meta.className = 'mt-2 text-xs text-gray-500';
-            const inclusionText = inclusionList.length ? `Inclusion: ${inclusionList.join(', ')}` : '';
-            const exclusionText = exclusionList.length ? `Exclusion: ${exclusionList.join(', ')}` : '';
-            meta.textContent = [inclusionText, exclusionText].filter(Boolean).join(' • ');
-            content.appendChild(meta);
-          }
-
-          item.appendChild(status);
-          item.appendChild(content);
-          return item;
-        }
-
-        function renderSectionCard(sectionName, data) {
-          if (!data.eligible.length && !data.excluded.length) return null;
-          const card = document.createElement('div');
-          card.className = 'rounded-xl border border-gray-200 bg-white p-5 shadow-sm flex flex-col gap-3';
-
-          const header = document.createElement('div');
-          header.className = 'flex items-center gap-2';
-
-          const titleWrap = document.createElement('div');
-          titleWrap.innerHTML = `
-            <div class="flex items-center gap-2">
-              <span class="text-xl">${data.icon}</span>
-              <h3 class="text-lg font-semibold text-gray-900">${sectionName}</h3>
-            </div>
-          `;
-
-          header.appendChild(titleWrap);
-          card.appendChild(header);
-
-          const list = document.createElement('ul');
-          list.className = 'space-y-3 list-none';
-          data.eligible.forEach((group) => list.appendChild(renderItem(group, false)));
-          data.excluded.forEach((group) => list.appendChild(renderItem(group, true)));
-          card.appendChild(list);
-
-          return card;
-        }
-
-        let hasRendered = false;
-        sectionData.forEach((data, sectionName) => {
-          const card = renderSectionCard(sectionName, data);
-          if (card) {
-            eligibilitySections.appendChild(card);
-            hasRendered = true;
-          }
-        });
-
-        if (hasRendered) {
-          eligibilityEmpty.classList.add('hidden');
-        } else {
+        if (!hasAny) {
           eligibilityEmpty.classList.remove('hidden');
+        } else {
+          eligibilityEmpty.classList.add('hidden');
+
+          // ✨ At a glance — summary chip row
+          if (summaryParts.length > 0) {
+            const glanceLabel = document.createElement('p');
+            glanceLabel.className = 'mb-2 text-xs font-semibold uppercase tracking-wider text-blue-500';
+            glanceLabel.textContent = '✨ At a glance';
+            eligibilitySections.appendChild(glanceLabel);
+
+            const pillRow = document.createElement('div');
+            pillRow.className = 'mb-5 flex flex-wrap gap-2';
+            summaryParts.slice(0, 5).forEach(part => {
+              const chip = document.createElement('span');
+              chip.className = 'inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-100';
+              chip.textContent = part;
+              pillRow.appendChild(chip);
+            });
+            eligibilitySections.appendChild(pillRow);
+          }
+
+          // 🎓 You must be — card-style checklist
+          if (requirementLines.length > 0) {
+            const reqPanel = document.createElement('div');
+            reqPanel.className = 'rounded-xl border border-emerald-100 bg-emerald-50/40 p-5';
+
+            const reqHeading = document.createElement('p');
+            reqHeading.className = 'mb-4 text-xs font-semibold uppercase tracking-wider text-emerald-700';
+            reqHeading.textContent = '🎓 You must be';
+            reqPanel.appendChild(reqHeading);
+
+            const reqList = document.createElement('ul');
+            reqList.className = 'space-y-2';
+            requirementLines.forEach(({ text, emoji }) => {
+              const li = document.createElement('li');
+              li.className = 'flex items-center gap-3 rounded-lg border border-emerald-100 bg-white px-4 py-3 shadow-sm';
+
+              const emojiSpan = document.createElement('span');
+              emojiSpan.className = 'shrink-0 text-base leading-none';
+              emojiSpan.textContent = emoji;
+
+              const textSpan = document.createElement('span');
+              textSpan.className = 'text-sm text-gray-800';
+              textSpan.textContent = text;
+
+              li.appendChild(emojiSpan);
+              li.appendChild(textSpan);
+              reqList.appendChild(li);
+            });
+            reqPanel.appendChild(reqList);
+            eligibilitySections.appendChild(reqPanel);
+          }
+
+          // 🚫 NOT eligible — red-tinted, only shown when exclusions exist
+          if (exclusionLines.length > 0) {
+            const excPanel = document.createElement('div');
+            excPanel.className = 'rounded-xl border border-red-100 bg-red-50/40 p-5';
+
+            const excHeading = document.createElement('p');
+            excHeading.className = 'mb-4 text-xs font-semibold uppercase tracking-wider text-red-600';
+            excHeading.textContent = '🚫 You are NOT eligible if...';
+            excPanel.appendChild(excHeading);
+
+            const excList = document.createElement('ul');
+            excList.className = 'space-y-2';
+            exclusionLines.forEach(line => {
+              const li = document.createElement('li');
+              li.className = 'flex items-center gap-3 rounded-lg border border-red-100 bg-white px-4 py-3 shadow-sm';
+              const icon = document.createElement('span');
+              icon.className = 'shrink-0 text-base leading-none';
+              icon.textContent = '🚫';
+              const text = document.createElement('span');
+              text.className = 'text-sm text-gray-700';
+              text.textContent = line;
+              li.appendChild(icon);
+              li.appendChild(text);
+              excList.appendChild(li);
+            });
+            excPanel.appendChild(excList);
+            eligibilitySections.appendChild(excPanel);
+          }
         }
 
         // How to Apply section - NEW LOGIC WITH requires_application
@@ -607,30 +848,54 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div>
-                  <h3 class="font-semibold text-blue-900 mb-2">No Separate Application Required</h3>
+                  <h3 class="font-semibold text-blue-900 mb-2">✨ Great news! — No Separate Application Required</h3>
                   <p class="text-sm text-blue-800 leading-relaxed">All eligible students are automatically considered for this scholarship upon admission. If you meet the eligibility criteria, your scholarship offer will be outlined in your Offer of Admission letter.</p>
                 </div>
               </div>
             </div>
           `;
         } else if (scholarship.application_url) {
-          // Regular application process with button
-          applyContent.innerHTML = `
-            <div class="space-y-4">
-              <a href="${scholarship.application_url}" target="_blank" id="apply-button"
-                 class="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-                Apply for This Scholarship
-              </a>
-              <p class="text-sm text-gray-600">This will take you to the official application page</p>
-            </div>
-          `;
-          const applyButton = document.getElementById('apply-button');
-          applyButton.addEventListener('click', function(event) {
-            const confirmed = confirm('You will be redirected to the official application page. Continue?');
-            if (!confirmed) {
-              event.preventDefault();
-            }
-          });
+          // Regular application process with button — build with DOM to avoid XSS
+          const safeApplicationUrl = safeUrl(scholarship.application_url);
+          if (safeApplicationUrl) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'space-y-4';
+
+            const eligibleMsg = document.createElement('p');
+            eligibleMsg.className = 'rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700';
+            eligibleMsg.textContent = '✨ You could be eligible for this scholarship!';
+
+            const applyLink = document.createElement('a');
+            applyLink.href = safeApplicationUrl;
+            applyLink.target = '_blank';
+            applyLink.rel = 'noopener noreferrer';
+            applyLink.id = 'apply-button';
+            applyLink.className = 'inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
+            applyLink.textContent = '🎯 Apply for This Scholarship';
+            applyLink.addEventListener('click', function(event) {
+              const confirmed = confirm('You will be redirected to the official application page. Continue?');
+              if (!confirmed) event.preventDefault();
+            });
+
+            const hint = document.createElement('p');
+            hint.className = 'text-sm text-gray-600';
+            hint.textContent = 'This will take you to the official application page';
+
+            wrapper.appendChild(eligibleMsg);
+            wrapper.appendChild(applyLink);
+            wrapper.appendChild(hint);
+            applyContent.appendChild(wrapper);
+          } else {
+            // URL present but failed safety validation — treat as unavailable
+            applyContent.innerHTML = `
+              <div class="space-y-4">
+                <button disabled class="inline-flex items-center justify-center rounded-lg bg-gray-300 px-8 py-4 text-sm font-semibold text-white cursor-not-allowed">
+                  Application Link Not Available
+                </button>
+                <p class="text-sm text-gray-600">Please contact the organization directly to apply</p>
+              </div>
+            `;
+          }
         } else {
           // No application URL available
           applyContent.innerHTML = `
