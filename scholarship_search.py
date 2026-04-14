@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+import re
 
 from flask import Blueprint, request, jsonify
 from sqlalchemy import text
@@ -7,6 +8,18 @@ from sqlalchemy import text
 from db import engine
 
 bp_search = Blueprint('scholarship_search', __name__)
+
+
+def sanitize_fulltext_query(term):
+    """Strip MySQL FULLTEXT BOOLEAN MODE operators from user input.
+    Returns a safe query string with prefix-match wildcards, or None if nothing usable remains.
+    e.g. "engineering scholarship" -> "engineering* scholarship*"
+    """
+    clean = re.sub(r'[+\-><()\~\*\"\@]+', ' ', term).strip()
+    words = [w for w in clean.split() if len(w) >= 2]
+    if not words:
+        return None
+    return ' '.join(f'{w}*' for w in words)
 
 
 def parse_list_param(value):
@@ -102,9 +115,12 @@ def search_scholarships():
         where_conditions = ["s.status = 'active'", deadline_filter]
         params = {}
 
-        if search_term:
-            where_conditions.append("(s.title LIKE :search_term OR s.description LIKE :search_term)")
-            params['search_term'] = f'%{search_term}%'
+        # FULLTEXT search — faster than LIKE and gives relevance ranking
+        # Valid statuses are: active, expired, draft, suspended — only 'active' is shown to students
+        ft_query = sanitize_fulltext_query(search_term) if search_term else None
+        if ft_query:
+            where_conditions.append("MATCH(s.title, s.description) AGAINST (:ft_search IN BOOLEAN MODE)")
+            params['ft_search'] = ft_query
 
         if min_amount is not None:
             where_conditions.append("s.amount >= :min_amount")
@@ -250,7 +266,15 @@ def search_scholarships():
             'created_at': 's.created_at',
             'industry': 's.industry'
         }
-        order_clause = f"{order_mapping[sort_by]} {sort_order.upper()}"
+
+        # When a keyword search is active, relevance is the primary sort;
+        # the user's chosen sort (deadline/amount/title) becomes the tiebreaker.
+        if ft_query:
+            order_clause = f"relevance_score DESC, {order_mapping[sort_by]} {sort_order.upper()}"
+            relevance_col = ", MATCH(s.title, s.description) AGAINST (:ft_search IN BOOLEAN MODE) AS relevance_score"
+        else:
+            order_clause = f"{order_mapping[sort_by]} {sort_order.upper()}"
+            relevance_col = ""
 
         # Calculate offset
         offset = (page - 1) * per_page
@@ -259,7 +283,7 @@ def search_scholarships():
 
         # Main query
         query = text(f'''
-            SELECT 
+            SELECT
                 s.id,
                 s.title,
                 s.amount,
@@ -270,6 +294,7 @@ def search_scholarships():
                 o.type as organization_type,
                 o.jurisdiction_state,
                 o.jurisdiction_country
+                {relevance_col}
             FROM scholarships s
             JOIN organizations o ON s.organization_id = o.id
             WHERE {where_clause}
@@ -377,7 +402,8 @@ def get_filter_options():
             industries_query = text('''
                 SELECT DISTINCT industry
                 FROM scholarships
-                WHERE industry IS NOT NULL AND industry != ''
+                WHERE status = 'active'
+                AND industry IS NOT NULL AND industry != ''
                 ORDER BY industry
             ''')
             industries_result = conn.execute(industries_query)
