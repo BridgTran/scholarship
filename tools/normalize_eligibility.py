@@ -980,7 +980,70 @@ def extract_sectioned_rules(text):
         elif current_section == SECTION_CONDITIONS:
             condition_lines.append(content)
 
+    # Whole-text pass for study_mode (ON_CAMPUS / ONLINE / HYBRID)
+    extract_study_mode(text, extracted)
+
     return extracted, benefit_lines, condition_lines, amount_values, manual_notes
+
+
+_STUDY_MODE_ON_CAMPUS_RE = (
+    r'\bon[-\s]campus\b'           # "on-campus" / "on campus"
+    r'|\bcampus\s+students?\b'     # "campus students"
+    r'|\bface[-\s]to[-\s]face\b'   # "face-to-face" / "face to face"
+    r'|\bin[-\s]person\b'          # "in-person" / "in person"
+    r'|\binternal\s+students?\b'   # "internal students"
+    r'|\binternally\s+enrolled\b'  # "internally enrolled"
+)
+_STUDY_MODE_ONLINE_RE = (
+    r'\bonline\b'
+    r'|\bdistance\s+(?:education|learning|study)\b'
+    r'|\bexternal\s+students?\b'
+    r'|\bexternally\s+enrolled\b'
+    r'|\bremote\s+study\b'
+)
+_STUDY_MODE_HYBRID_RE = (
+    r'\bhybrid\b'
+    r'|\bblended(?:\s+learning)?\b'
+    r'|\bflexible\s+delivery\b'
+    r'|\bflexible\s+learning\b'
+)
+
+
+def extract_study_mode(text, extracted):
+    """Detect ON_CAMPUS / ONLINE / HYBRID from full text and append to extracted."""
+    if not text:
+        return
+    text_lower = text.lower()
+    on_m  = re.search(_STUDY_MODE_ON_CAMPUS_RE, text_lower)
+    off_m = re.search(_STUDY_MODE_ONLINE_RE, text_lower)
+    hyb_m = re.search(_STUDY_MODE_HYBRID_RE, text_lower)
+
+    # Both on-campus AND online signals in the same text → infer HYBRID
+    if on_m and off_m and not hyb_m:
+        sentence = find_sentence(text, on_m.start(), on_m.end())
+        append_criteria(
+            extracted, 'academic_level', 'study_mode', 'HYBRID',
+            infer_is_required(sentence), sentence=sentence
+        )
+    else:
+        if on_m:
+            sentence = find_sentence(text, on_m.start(), on_m.end())
+            append_criteria(
+                extracted, 'academic_level', 'study_mode', 'ON_CAMPUS',
+                infer_is_required(sentence), sentence=sentence
+            )
+        if off_m:
+            sentence = find_sentence(text, off_m.start(), off_m.end())
+            append_criteria(
+                extracted, 'academic_level', 'study_mode', 'ONLINE',
+                infer_is_required(sentence), sentence=sentence
+            )
+    if hyb_m:
+        sentence = find_sentence(text, hyb_m.start(), hyb_m.end())
+        append_criteria(
+            extracted, 'academic_level', 'study_mode', 'HYBRID',
+            infer_is_required(sentence), sentence=sentence
+        )
 
 
 def extract_rules_from_text(text):
@@ -1344,39 +1407,7 @@ def extract_rules_from_text(text):
             infer_is_required(sentence),
             sentence=sentence
         )
-    if re.search(r'\bon[-\s]campus\b|\binternal(?:ly)?\b', text_lower):
-        match = re.search(r'\bon[-\s]campus\b|\binternal(?:ly)?\b', text_lower)
-        sentence = find_sentence(text, match.start(), match.end())
-        append_criteria(
-            extracted,
-            'academic_level',
-            'study_mode',
-            'ON_CAMPUS',
-            infer_is_required(sentence),
-            sentence=sentence
-        )
-    if re.search(r'\bonline\b|\bdistance\b|\bexternal(?:ly)?\b', text_lower):
-        match = re.search(r'\bonline\b|\bdistance\b|\bexternal(?:ly)?\b', text_lower)
-        sentence = find_sentence(text, match.start(), match.end())
-        append_criteria(
-            extracted,
-            'academic_level',
-            'study_mode',
-            'ONLINE',
-            infer_is_required(sentence),
-            sentence=sentence
-        )
-    if re.search(r'\bhybrid\b|\bblended\b', text_lower):
-        match = re.search(r'\bhybrid\b|\bblended\b', text_lower)
-        sentence = find_sentence(text, match.start(), match.end())
-        append_criteria(
-            extracted,
-            'academic_level',
-            'study_mode',
-            'HYBRID',
-            infer_is_required(sentence),
-            sentence=sentence
-        )
+    extract_study_mode(text, extracted)
 
     if re.search(r'\b(undergraduate|bachelor|ug)\b', text_lower):
         match = re.search(r'\b(undergraduate|bachelor|ug)\b', text_lower)

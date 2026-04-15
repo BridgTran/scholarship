@@ -881,7 +881,9 @@ function renderResults(scholarships) {
     card.className =
       "group relative overflow-hidden rounded-xl border border-gray-200/60 bg-white p-6 transition-all duration-200 hover:border-gray-300 hover:shadow-lg backdrop-blur-sm";
 
-    card.onclick = () => {
+    card.onclick = (e) => {
+      // Don't navigate if the click came from inside a button
+      if (e.target.closest('button')) return;
       window.location.href = `/scholarship/${scholarship.id}`;
     };
 
@@ -990,29 +992,47 @@ function renderResults(scholarships) {
             <span class="text-xs text-gray-500">${getDaysTextCompact(days)}</span>
           </div>
 
-          <!-- Minimal view button -->
-          <button class="group/view inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50">
-            View
-            <svg class="h-3.5 w-3.5 transition-transform group-hover/view:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </button>
+          <!-- Action buttons — gap-3 gives clear visual + touch separation -->
+          <div class="flex items-center gap-3">
+            <button class="js-compare-btn inline-flex min-w-[88px] items-center justify-center gap-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 active:bg-blue-100" data-scholarship-id="${escapeHtml(String(scholarship.id))}">+ Compare</button>
+            <button class="js-view-btn group/view inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 active:bg-gray-100">
+              View
+              <svg class="h-3.5 w-3.5 transition-transform group-hover/view:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
         ${tooltipHtml}
       </div>
 
-      <!-- Hover effect - subtle -->
-      <div class="absolute inset-0 rounded-xl ring-1 ring-blue-500/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100"></div>
+      <!-- Hover effect - subtle (pointer-events-none so it never intercepts button clicks) -->
+      <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-blue-500/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100"></div>
     `;
 
-    // Add click handler to the view button specifically
-    const viewBtn = card.querySelector('button');
+    // View button
+    const viewBtn = card.querySelector('.js-view-btn');
     if (viewBtn) {
       viewBtn.onclick = (e) => {
         e.stopPropagation();
         window.location.href = `/scholarship/${scholarship.id}`;
+      };
+    }
+
+    // Compare button
+    const compareBtn = card.querySelector('.js-compare-btn');
+    if (compareBtn) {
+      // Restore selected state if already in compareMap
+      if (compareMap.has(String(scholarship.id))) {
+        compareBtn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        compareBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+        compareBtn.textContent = '✓ Added';
+      }
+      compareBtn.onclick = (e) => {
+        e.stopPropagation();
+        toggleCompare(scholarship);
       };
     }
 
@@ -1386,10 +1406,285 @@ function getDaysTextCompact(days) {
     performSearch();
   });
 
+  // ---------- comparison feature ----------
+  const compareMap = new Map(); // id (string) → scholarship object
+  const MAX_COMPARE = 3;
+  let _toastTimer = null;
+
+  function safeUrl(url) {
+    if (!url) return '#';
+    try {
+      const u = new URL(url);
+      if (u.protocol === 'https:' || u.protocol === 'http:') return url;
+    } catch (_) {}
+    return '#';
+  }
+
+  function showCompareToast(msg) {
+    const toast = document.getElementById('compareToast');
+    const msgEl = document.getElementById('compareToastMsg');
+    if (!toast || !msgEl) return;
+    msgEl.textContent = msg;
+    toast.classList.remove('hidden');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+
+  function toggleCompare(scholarship) {
+    const id = String(scholarship.id);
+    if (compareMap.has(id)) {
+      compareMap.delete(id);
+    } else {
+      if (compareMap.size >= MAX_COMPARE) {
+        showCompareToast('You can compare up to 3 scholarships at once.');
+        return;
+      }
+      compareMap.set(id, scholarship);
+    }
+    renderComparisonTray();
+    updateAllCompareButtons();
+  }
+
+  function updateAllCompareButtons() {
+    document.querySelectorAll('.js-compare-btn').forEach(btn => {
+      const id = String(btn.dataset.scholarshipId);
+      const active = compareMap.has(id);
+      btn.classList.toggle('bg-blue-600', active);
+      btn.classList.toggle('text-white', active);
+      btn.classList.toggle('border-blue-600', active);
+      btn.classList.toggle('bg-white', !active);
+      btn.classList.toggle('text-gray-700', !active);
+      btn.classList.toggle('border-gray-300', !active);
+      btn.textContent = active ? '✓ Added' : '+ Compare';
+    });
+  }
+
+  function renderComparisonTray() {
+    const tray = document.getElementById('compareTray');
+    const slotsEl = document.getElementById('traySlots');
+    const countEl = document.getElementById('trayCount');
+    const openBtn = document.getElementById('compareOpenBtn');
+    if (!tray || !slotsEl) return;
+
+    const items = Array.from(compareMap.values());
+    countEl.textContent = items.length;
+
+    if (items.length === 0) {
+      tray.style.transform = 'translateY(100%)';
+      setTimeout(() => tray.classList.add('hidden'), 310);
+      return;
+    }
+
+    tray.classList.remove('hidden');
+    requestAnimationFrame(() => { tray.style.transform = 'translateY(0)'; });
+    openBtn.disabled = items.length < 2;
+
+    slotsEl.innerHTML = '';
+    items.forEach(s => {
+      const slot = document.createElement('div');
+      slot.className = 'flex min-w-0 items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm';
+      const title = document.createElement('span');
+      title.className = 'max-w-[150px] truncate font-medium text-gray-800 text-xs';
+      title.textContent = s.title || '';
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'ml-1 shrink-0 rounded-full p-0.5 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600';
+      removeBtn.title = 'Remove';
+      removeBtn.innerHTML = `<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`;
+      removeBtn.onclick = () => removeFromCompare(String(s.id));
+      slot.appendChild(title);
+      slot.appendChild(removeBtn);
+      slotsEl.appendChild(slot);
+    });
+
+    // Empty placeholder slots
+    for (let i = items.length; i < MAX_COMPARE; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'flex min-w-[120px] items-center justify-center rounded-xl border-2 border-dashed border-gray-200 px-4 py-2 text-xs text-gray-400';
+      empty.textContent = '+ Add scholarship';
+      slotsEl.appendChild(empty);
+    }
+  }
+
+  function removeFromCompare(id) {
+    compareMap.delete(String(id));
+    renderComparisonTray();
+    updateAllCompareButtons();
+  }
+
+  function clearComparison() {
+    compareMap.clear();
+    renderComparisonTray();
+    updateAllCompareButtons();
+  }
+
+  function openComparisonModal() {
+    const modal = document.getElementById('comparisonModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    renderComparisonContent();
+  }
+
+  function closeComparisonModal() {
+    const modal = document.getElementById('comparisonModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  function renderComparisonContent() {
+    const content = document.getElementById('comparisonContent');
+    if (!content) return;
+    const scholarships = Array.from(compareMap.values());
+    const n = scholarships.length;
+
+    // Map canonical DB values (criteria_key: 'level' / 'degree_level') to readable labels
+    function formatDegreeHint(raw) {
+      if (!raw) return '—';
+      const map = {
+        UNDERGRADUATE:      'Undergraduate',
+        POSTGRADUATE:       'Postgraduate',
+        HDR:                'HDR / PhD',
+        PHD:                'PhD',
+        MASTERS:            'Masters',
+        DIPLOMA:            'Diploma',
+        CERTIFICATE:        'Certificate',
+        VOCATIONAL:         'Vocational',
+        'HIGH_SCHOOL':      'High School',
+        'HIGH-SCHOOL-LEAVER': 'High School Leaver',
+        'high-school-leaver': 'High School Leaver',
+      };
+      const key = String(raw).toUpperCase().replace(/-/g, '_');
+      return map[key] || map[raw] || String(raw).replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+function formatYearOfStudy(raw) {
+      if (!raw) return '—';
+      const map = {
+        YEAR_1: '1st year', YEAR_2: '2nd year', YEAR_3: '3rd year',
+        YEAR_4: '4th year', YEAR_5: '5th year', FINAL_YEAR: 'Final year',
+        ANY: 'Any year',
+      };
+      return map[String(raw).toUpperCase()] || String(raw).replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function formatStudyLoad(raw) {
+      if (!raw) return '—';
+      const map = {
+        FULL_TIME: 'Full-time', PART_TIME: 'Part-time',
+        PART_TIME_75: 'Part-time (≥75%)', PART_TIME_50: 'Part-time (≥50%)',
+        PART_TIME_25: 'Part-time (≥25%)',
+      };
+      return map[String(raw).toUpperCase()] || String(raw).replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function formatStudyMode(raw) {
+      if (!raw) return '—';
+      const map = { ON_CAMPUS: 'On campus', ONLINE: 'Online', HYBRID: 'Hybrid / flexible' };
+      return map[String(raw).toUpperCase()] || String(raw).replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    const rows = [
+      { label: 'Award',             fn: s => formatAmountDisplay(s) || '—' },
+      { label: 'Deadline',          fn: s => formatDate(s.deadline) || 'Open intake' },
+      { label: 'Type',              fn: s => s.scholarship_type || s.type || '—' },
+      { label: 'Study Level',       fn: s => formatDegreeHint(s.degree_hint) },
+{ label: 'Year of Study',     fn: s => formatYearOfStudy(s.year_of_study_hint) },
+      { label: 'Study Load',        fn: s => formatStudyLoad(s.study_load_hint) },
+      { label: 'Study Mode',        fn: s => formatStudyMode(s.study_mode_hint) },
+    ];
+
+    const gridCols = `150px repeat(${n}, minmax(0, 1fr))`;
+
+    let html = `<div class="overflow-x-auto -mx-6 px-6">`;
+    html += `<div style="display:grid;grid-template-columns:${gridCols};min-width:480px;">`;
+
+    // Header row: empty label cell + one cell per scholarship
+    html += `<div class="sticky left-0 z-10 bg-white border-b-2 border-gray-200 py-3 pr-4"></div>`;
+    scholarships.forEach(s => {
+      const applyUrl = safeUrl(s.apply_url || s.url || '');
+      const sid = escapeHtml(String(s.id));
+      html += `<div class="border-b-2 border-gray-200 py-3 px-3 min-w-0">
+        <p class="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">${escapeHtml(s.title || '')}</p>
+        ${s.organization_name ? `<p class="mt-0.5 text-xs text-gray-500">${escapeHtml(s.organization_name)}</p>` : ''}
+        <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+          <a href="/scholarship/${sid}" onclick="event.stopPropagation()" class="text-[11px] font-medium text-blue-600 hover:underline">View details →</a>
+          ${applyUrl !== '#' ? `<a href="${escapeHtml(applyUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="text-[11px] font-medium text-green-600 hover:underline">Apply ↗</a>` : ''}
+        </div>
+        <button onclick="removeFromCompare('${sid}');renderComparisonContent();" class="mt-1 text-[10px] text-red-400 hover:text-red-600 hover:underline transition-colors">Remove</button>
+      </div>`;
+    });
+
+    // Data rows
+    rows.forEach(row => {
+      const values = scholarships.map(row.fn);
+      const allSame = new Set(values).size <= 1;
+      const rowBg = allSame ? '' : 'bg-amber-50';
+      const labelCls = allSame ? 'text-gray-500' : 'font-semibold text-amber-700';
+
+      html += `<div class="sticky left-0 z-10 ${rowBg} border-b border-gray-100 py-3 pr-4 bg-inherit">
+        <span class="text-xs ${labelCls}">${escapeHtml(row.label)}</span>
+        ${!allSame ? `<span class="ml-1 text-[10px] text-amber-400">≠</span>` : ''}
+      </div>`;
+      values.forEach(val => {
+        html += `<div class="${rowBg} border-b border-gray-100 py-3 px-3 text-sm text-gray-800">${escapeHtml(val)}</div>`;
+      });
+    });
+
+    html += `</div></div>`;
+
+    if (n >= 2) {
+      html += `<p class="mt-5 text-xs text-gray-400 flex items-center gap-1.5">
+        <span class="inline-block h-3 w-4 rounded-sm border border-amber-200 bg-amber-50"></span>
+        Rows highlighted in amber differ between scholarships.
+      </p>`;
+    }
+
+    content.innerHTML = html;
+  }
+
   // ---------- bootstrap ----------
   loadFilterOptions();
 </script>
 
+
+  <!-- ===== Comparison UI ===== -->
+
+  <!-- Toast notification -->
+  <div id="compareToast" class="fixed bottom-24 left-1/2 z-50 hidden -translate-x-1/2 transition-all duration-200">
+    <div class="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-xl">
+      <span>⚠️</span>
+      <span id="compareToastMsg">You can compare up to 3 scholarships at once.</span>
+    </div>
+  </div>
+
+  <!-- Comparison tray (slides up from bottom) -->
+  <div id="compareTray" class="fixed bottom-0 left-0 right-0 z-40 hidden border-t border-gray-200 bg-white/95 shadow-2xl backdrop-blur-md" style="transform:translateY(100%);transition:transform 0.3s ease;">
+    <div class="mx-auto max-w-7xl px-6 py-4 lg:px-8">
+      <div class="flex flex-wrap items-center gap-3 sm:flex-nowrap">
+        <div id="traySlots" class="flex flex-1 flex-wrap gap-2 sm:flex-nowrap"></div>
+        <div class="flex shrink-0 items-center gap-3">
+          <span class="text-sm text-gray-500"><span id="trayCount">0</span>/3 selected</span>
+          <button onclick="clearComparison()" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50">Clear all</button>
+          <button id="compareOpenBtn" onclick="openComparisonModal()" disabled class="rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50">Compare</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison modal -->
+  <div id="comparisonModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeComparisonModal()"></div>
+    <div class="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div class="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+        <h2 class="text-lg font-semibold text-gray-900">Compare Scholarships</h2>
+        <button onclick="closeComparisonModal()" class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="comparisonContent" class="flex-1 overflow-auto p-6"></div>
+    </div>
+  </div>
 
   </body>
 </html>

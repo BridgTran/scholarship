@@ -315,7 +315,28 @@ def search_scholarships():
                    AND ec.criteria_type = 'location'
                    AND ec.criteria_key = 'study_state'
                    AND ec.is_required = 1
-                 LIMIT 1) AS study_state_hint
+                 LIMIT 1) AS study_state_hint,
+(SELECT ec.required_value
+                 FROM eligibility_criteria ec
+                 WHERE ec.scholarship_id = s.id
+                   AND ec.criteria_type = 'academic_level'
+                   AND ec.criteria_key = 'year_of_study'
+                   AND ec.is_required = 1
+                 LIMIT 1) AS year_of_study_hint,
+                (SELECT ec.required_value
+                 FROM eligibility_criteria ec
+                 WHERE ec.scholarship_id = s.id
+                   AND ec.criteria_type = 'academic_level'
+                   AND ec.criteria_key = 'study_load'
+                   AND ec.is_required = 1
+                 LIMIT 1) AS study_load_hint,
+                (SELECT ec.required_value
+                 FROM eligibility_criteria ec
+                 WHERE ec.scholarship_id = s.id
+                   AND ec.criteria_type = 'academic_level'
+                   AND ec.criteria_key = 'study_mode'
+                   AND ec.is_required = 1
+                 LIMIT 1) AS study_mode_hint
                 {relevance_col}
             FROM scholarships s
             JOIN organizations o ON s.organization_id = o.id
@@ -358,6 +379,9 @@ def search_scholarships():
                     'residency_hint': row.residency_hint,
                     'degree_hint': row.degree_hint,
                     'study_state_hint': row.study_state_hint,
+'year_of_study_hint': row.year_of_study_hint,
+                    'study_load_hint': row.study_load_hint,
+                    'study_mode_hint': row.study_mode_hint,
                 })
 
             # Get total count
