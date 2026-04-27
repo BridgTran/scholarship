@@ -286,6 +286,7 @@ def search_scholarships():
             SELECT
                 s.id,
                 s.title,
+                s.description,
                 s.amount,
                 s.deadline,
                 s.industry,
@@ -336,7 +337,19 @@ def search_scholarships():
                    AND ec.criteria_type = 'academic_level'
                    AND ec.criteria_key = 'study_mode'
                    AND ec.is_required = 1
-                 LIMIT 1) AS study_mode_hint
+                 LIMIT 1) AS study_mode_hint,
+                (SELECT ec.required_value
+                 FROM eligibility_criteria ec
+                 WHERE ec.scholarship_id = s.id
+                   AND ec.criteria_key = 'gender'
+                   AND ec.is_required = 1
+                 LIMIT 1) AS gender_hint,
+                (SELECT ec.required_value
+                 FROM eligibility_criteria ec
+                 WHERE ec.scholarship_id = s.id
+                   AND ec.criteria_key IN ('institution', 'university')
+                   AND ec.is_required = 1
+                 LIMIT 1) AS institution_hint
                 {relevance_col}
             FROM scholarships s
             JOIN organizations o ON s.organization_id = o.id
@@ -366,6 +379,7 @@ def search_scholarships():
                 scholarships.append({
                     'id': row.id,
                     'title': row.title,
+                    'description': row.description,
                     'amount': amount_value,
                     'amount_display': amount_display,
                     'deadline': row.deadline.isoformat() if row.deadline else None,
@@ -379,9 +393,11 @@ def search_scholarships():
                     'residency_hint': row.residency_hint,
                     'degree_hint': row.degree_hint,
                     'study_state_hint': row.study_state_hint,
-'year_of_study_hint': row.year_of_study_hint,
+                    'year_of_study_hint': row.year_of_study_hint,
                     'study_load_hint': row.study_load_hint,
                     'study_mode_hint': row.study_mode_hint,
+                    'gender_hint': row.gender_hint,
+                    'institution_hint': row.institution_hint,
                 })
 
             # Get total count

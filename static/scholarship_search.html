@@ -38,6 +38,13 @@
           </div>
           <div class="flex items-center space-x-4">
             <span class="hidden text-sm text-gray-600 md:inline">Find your perfect match</span>
+            <button onclick="openSavedDrawer()" class="relative inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+              </svg>
+              <span class="hidden sm:inline">Saved</span>
+              <span id="savedCountBadge" class="hidden absolute -right-1.5 -top-1.5 h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">0</span>
+            </button>
             <a href="/scholarship_search" class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:shadow-md">
               Explore Scholarships
             </a>
@@ -840,14 +847,16 @@
       lines.push(`📍 Study in ${stateHint}`);
     }
 
-    // Scholarship type (from existing field, as 4th tooltip line only)
-    const typeMap = {
-      'Merit-Based':    '🏆 Merit-based',
-      'Need-Based':     '💰 Need-based',
-      'Merit-And-Need': '⭐ Merit & need',
+    // Scholarship type — badge pill + tooltip line
+    const typeBadgeMap = {
+      'Merit-Based':    { emoji: '🏆', label: 'Merit-Based',  color: 'amber' },
+      'Need-Based':     { emoji: '💰', label: 'Need-Based',   color: 'blue'  },
+      'Merit-And-Need': { emoji: '⭐', label: 'Merit & Need', color: 'green' },
     };
-    if (scholarship.scholarship_type && typeMap[scholarship.scholarship_type]) {
-      lines.push(typeMap[scholarship.scholarship_type]);
+    if (scholarship.scholarship_type && typeBadgeMap[scholarship.scholarship_type]) {
+      const tb = typeBadgeMap[scholarship.scholarship_type];
+      badges.push({ ...tb, type: 'scholarship_type' });
+      lines.push(`${tb.emoji} ${tb.label}`);
     }
 
     return { badges, lines };
@@ -859,6 +868,7 @@
       green:  'bg-green-50 border-green-100 text-green-700',
       purple: 'bg-purple-50 border-purple-100 text-purple-700',
       slate:  'bg-slate-50 border-slate-200 text-slate-600',
+      amber:  'bg-amber-50 border-amber-100 text-amber-700',
     };
     const cls = colorMap[badge.color] || colorMap.slate;
     return `<span class="inline-flex items-center gap-0.5 rounded-full border ${cls} px-2 py-0.5 text-[10px] font-medium">${escapeHtml(badge.emoji)} ${escapeHtml(badge.label)}</span>`;
@@ -888,9 +898,6 @@ function renderResults(scholarships) {
     };
 
     const description = scholarship.description || "";
-    const shortDescription =
-      description.length > 120 ? `${description.slice(0, 120)}...` : description;
-
     const orgName = scholarship.organization_name || "";
     const awardAmount = formatAmountDisplay(scholarship);
     const deadlineText = formatDate(scholarship.deadline);  // null if no deadline
@@ -899,15 +906,6 @@ function renderResults(scholarships) {
     const badgesHtml = badges.length
       ? `<div class="mt-2 flex flex-wrap gap-1">${badges.map(badgePill).join('')}</div>`
       : '';
-    const tooltipHtml = lines.length ? `
-      <div class="max-h-0 overflow-hidden opacity-0 transition-all duration-200 group-hover:max-h-40 group-hover:opacity-100">
-        <div class="mt-3 border-t border-gray-100 pt-3">
-          <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-500">⚡ Quick eligibility check</p>
-          <ul class="space-y-1">
-            ${lines.map(l => `<li class="text-xs text-gray-600">${escapeHtml(l)}</li>`).join('')}
-          </ul>
-        </div>
-      </div>` : '';
 
     card.innerHTML = `
       <!-- Subtle left accent border -->
@@ -922,8 +920,8 @@ function renderResults(scholarships) {
             </h3>
             ${
               orgName
-                ? `<div class="inline-flex items-center gap-1.5 text-xs text-gray-600">
-                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                ? `<div class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-800">
+                    <svg class="h-3.5 w-3.5 shrink-0 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                     ${escapeHtml(orgName)}
@@ -942,8 +940,22 @@ function renderResults(scholarships) {
 
         <!-- Description -->
         ${
-          shortDescription
-            ? `<p class="mt-3 text-sm text-gray-600 leading-relaxed">${escapeHtml(shortDescription)}</p>`
+          description
+            ? `<div class="desc-wrap mt-3" data-open="false">
+                <p class="desc-short text-sm text-gray-700 leading-relaxed"
+                   style="overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;">
+                  ${escapeHtml(description)}
+                </p>
+                ${description.split(' ').length > 25 ? `
+                <div class="desc-full overflow-hidden text-sm text-gray-700 leading-relaxed"
+                     style="max-height:0;transition:max-height 0.35s ease;">
+                  ${escapeHtml(description)}
+                </div>
+                <div class="mt-1">
+                  <button class="desc-more text-xs text-blue-500 hover:text-blue-700 transition-colors" type="button">read more ▾</button>
+                  <button class="desc-less hidden text-xs text-blue-500 hover:text-blue-700 transition-colors" type="button">show less ▴</button>
+                </div>` : ''}
+              </div>`
             : ""
         }
 
@@ -989,11 +1001,15 @@ function renderResults(scholarships) {
           <!-- Urgency indicator -->
           <div class="flex items-center gap-2">
             ${urgency.replace('rounded-lg', 'rounded-md').replace('px-3 py-1.5', 'px-2 py-1')}
-            <span class="text-xs text-gray-500">${getDaysTextCompact(days)}</span>
           </div>
 
           <!-- Action buttons — gap-3 gives clear visual + touch separation -->
           <div class="flex items-center gap-3">
+            <button class="js-bookmark-btn inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-400 transition-colors hover:bg-amber-50 hover:text-amber-500 active:bg-amber-100" data-id="${escapeHtml(String(scholarship.id))}" title="Save scholarship">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+              </svg>
+            </button>
             <button class="js-compare-btn inline-flex min-w-[88px] items-center justify-center gap-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 active:bg-blue-100" data-scholarship-id="${escapeHtml(String(scholarship.id))}">+ Compare</button>
             <button class="js-view-btn group/view inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 active:bg-gray-100">
               View
@@ -1005,7 +1021,7 @@ function renderResults(scholarships) {
         </div>
       </div>
 
-        ${tooltipHtml}
+
       </div>
 
       <!-- Hover effect - subtle (pointer-events-none so it never intercepts button clicks) -->
@@ -1034,6 +1050,48 @@ function renderResults(scholarships) {
         e.stopPropagation();
         toggleCompare(scholarship);
       };
+    }
+
+    // Bookmark button
+    const bookmarkBtn = card.querySelector('.js-bookmark-btn');
+    if (bookmarkBtn) {
+      if (savedMap.has(String(scholarship.id))) {
+        _setBookmarkActive(bookmarkBtn, true);
+      }
+      bookmarkBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = String(scholarship.id);
+        const active = savedMap.has(id);
+        if (active) { savedMap.delete(id); } else { savedMap.set(id, scholarship); }
+        _setBookmarkActive(bookmarkBtn, !active);
+        _persistSaved();
+        _updateSavedBadge();
+      });
+    }
+
+    // Description expand/collapse
+    const descWrap = card.querySelector('.desc-wrap');
+    if (descWrap) {
+      const short = descWrap.querySelector('.desc-short');
+      const full  = descWrap.querySelector('.desc-full');
+      const more  = descWrap.querySelector('.desc-more');
+      const less  = descWrap.querySelector('.desc-less');
+      if (more && less && full) {
+        more.addEventListener('click', e => {
+          e.stopPropagation();
+          full.style.maxHeight = full.scrollHeight + 'px';
+          short.style.display  = 'none';
+          more.classList.add('hidden');
+          less.classList.remove('hidden');
+        });
+        less.addEventListener('click', e => {
+          e.stopPropagation();
+          full.style.maxHeight = '0';
+          less.classList.add('hidden');
+          more.classList.remove('hidden');
+          setTimeout(() => { short.style.display = ''; }, 350);
+        });
+      }
     }
 
     resultsList.appendChild(card);
@@ -1406,6 +1464,96 @@ function getDaysTextCompact(days) {
     performSearch();
   });
 
+  // ---------- saved / bookmarks ----------
+  const savedMap = new Map();
+
+  (function _loadSaved() {
+    try {
+      const stored = JSON.parse(localStorage.getItem('oyster_saved') || '[]');
+      stored.forEach(s => savedMap.set(String(s.id), s));
+    } catch (_) {}
+    _updateSavedBadge();
+  })();
+
+  function _persistSaved() {
+    try { localStorage.setItem('oyster_saved', JSON.stringify(Array.from(savedMap.values()))); } catch (_) {}
+  }
+
+  function _setBookmarkActive(btn, active) {
+    const svg = btn.querySelector('svg');
+    if (active) {
+      svg.setAttribute('fill', 'currentColor');
+      btn.classList.add('text-amber-500', 'border-amber-200', 'bg-amber-50');
+      btn.classList.remove('text-gray-400', 'border-gray-200', 'bg-white');
+    } else {
+      svg.setAttribute('fill', 'none');
+      btn.classList.remove('text-amber-500', 'border-amber-200', 'bg-amber-50');
+      btn.classList.add('text-gray-400', 'border-gray-200', 'bg-white');
+    }
+  }
+
+  function _updateSavedBadge() {
+    const badge = document.getElementById('savedCountBadge');
+    const count = savedMap.size;
+    if (badge) {
+      badge.textContent = count;
+      badge.classList.toggle('hidden', count === 0);
+    }
+  }
+
+  function openSavedDrawer() {
+    const drawer = document.getElementById('savedDrawer');
+    if (!drawer) return;
+    _renderSavedDrawer();
+    drawer.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      drawer.querySelector('.saved-panel').style.transform = 'translateX(0)';
+    });
+  }
+
+  function closeSavedDrawer() {
+    const drawer = document.getElementById('savedDrawer');
+    if (!drawer) return;
+    drawer.querySelector('.saved-panel').style.transform = 'translateX(100%)';
+    setTimeout(() => drawer.classList.add('hidden'), 300);
+  }
+
+  function removeFromSaved(id) {
+    savedMap.delete(String(id));
+    _persistSaved();
+    _updateSavedBadge();
+    document.querySelectorAll(`.js-bookmark-btn[data-id="${id}"]`).forEach(btn => _setBookmarkActive(btn, false));
+    _renderSavedDrawer();
+  }
+
+  function _renderSavedDrawer() {
+    const list = document.getElementById('savedList');
+    if (!list) return;
+    const items = Array.from(savedMap.values());
+    if (!items.length) {
+      list.innerHTML = `<p class="py-8 text-center text-sm text-gray-400">No saved scholarships yet.<br>Tap the bookmark icon on any card.</p>`;
+      return;
+    }
+    list.innerHTML = items.map(s => {
+      const amt = s.amount ? `$${Number(s.amount).toLocaleString()}` : 'Amount N/A';
+      const org = s.organization_name ? `<p class="mt-0.5 text-xs text-gray-500">${escapeHtml(s.organization_name)}</p>` : '';
+      return `
+      <div class="group/saved relative rounded-xl border border-gray-100 bg-gray-50/60 p-4 transition-all hover:border-gray-200 hover:bg-white hover:shadow-sm cursor-pointer"
+           onclick="window.location.href='/scholarship/${s.id}'">
+        <button onclick="event.stopPropagation();removeFromSaved('${s.id}')"
+                class="absolute right-3 top-3 rounded-full p-1 text-gray-300 opacity-0 transition-all group-hover/saved:opacity-100 hover:bg-red-50 hover:text-red-400"
+                title="Remove">
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <p class="pr-6 text-sm font-medium text-gray-900 leading-snug">${escapeHtml(s.title || '')}</p>
+        ${org}
+        <p class="mt-1.5 text-xs font-semibold text-blue-600">${escapeHtml(amt)}</p>
+      </div>`;
+    }).join('');
+  }
+
   // ---------- comparison feature ----------
   const compareMap = new Map(); // id (string) → scholarship object
   const MAX_COMPARE = 3;
@@ -1655,6 +1803,27 @@ function formatYearOfStudy(raw) {
     <div class="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-xl">
       <span>⚠️</span>
       <span id="compareToastMsg">You can compare up to 3 scholarships at once.</span>
+    </div>
+  </div>
+
+  <!-- Saved scholarships drawer -->
+  <div id="savedDrawer" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" onclick="closeSavedDrawer()"></div>
+    <div class="saved-panel absolute right-0 top-0 bottom-0 flex w-full max-w-sm flex-col bg-white shadow-2xl"
+         style="transform:translateX(100%);transition:transform 0.3s ease;">
+      <div class="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
+        <h2 class="text-base font-semibold text-gray-900">Saved Scholarships</h2>
+        <button onclick="closeSavedDrawer()" class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="savedList" class="flex-1 space-y-2 overflow-y-auto p-4"></div>
+      <div class="shrink-0 border-t border-gray-100 px-5 py-3">
+        <button onclick="savedMap.clear();_persistSaved();_updateSavedBadge();_renderSavedDrawer();document.querySelectorAll('.js-bookmark-btn').forEach(b=>_setBookmarkActive(b,false));"
+                class="w-full rounded-lg border border-gray-200 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-red-500">
+          Clear all saved
+        </button>
+      </div>
     </div>
   </div>
 

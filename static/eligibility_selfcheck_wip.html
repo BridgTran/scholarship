@@ -1,0 +1,524 @@
+<!doctype html>
+<!--
+  ============================================================
+  ELIGIBILITY SELF-CHECK — WIP / PAID FEATURE
+  ============================================================
+  This file preserves all the eligibility self-check code
+  removed from scholarship_search.html.
+
+  This is the PAID feature for OysterMatch freemium model:
+    • Free users: search manually with filters
+    • Paid users: automatic profile matching via this flow
+
+  To reintegrate into scholarship_search.html:
+  1. Add hero button (see "HERO BUTTON" section)
+  2. Add hidden study_state input inside <form id="searchForm">
+  3. Add profile pill before resultsContainer
+  4. Add JS block (see "ELIGIBILITY SELF-CHECK JS" section) before
+     the saved/bookmarks JS block
+  5. Add modal HTML before "Saved Scholarships Drawer" comment
+  6. Wire into buildApiParams(), doResetAllFilters(), applyQueryParams()
+  7. Wire _initProfile + _applyProfileFieldsOnly into loadFilterOptions()
+     IMPORTANT: Add the event listener INSIDE openEligibilityModal() or
+     DOMContentLoaded — NOT at script parse time (modal is after </script>)
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Eligibility Self-Check WIP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<!-- ============================================================
+     HERO BUTTON
+     Add inside the hero <div class="mt-8 flex flex-col items-center gap-3 ...">
+     ============================================================ -->
+<!--
+  <button onclick="openEligibilityModal()" class="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    Check My Eligibility
+  </button>
+  <span class="text-sm text-gray-400">— or browse all scholarships below</span>
+-->
+
+<!-- ============================================================
+     HIDDEN STUDY_STATE INPUT
+     Add inside <form id="searchForm"> before </form>
+     ============================================================ -->
+<!--
+  <input type="hidden" id="study_state" name="study_state" value="">
+-->
+
+<!-- ============================================================
+     PROFILE PILL
+     Add before <!-- Results container -- inside <section class="space-y-8">
+     ============================================================ -->
+<!--
+  <div id="profilePill" class="hidden mb-6 flex items-center justify-between gap-4 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3">
+    <div class="flex min-w-0 items-center gap-2.5">
+      <svg class="h-4 w-4 shrink-0 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <p id="profilePillText" class="truncate text-sm font-medium text-blue-800"></p>
+    </div>
+    <div class="flex shrink-0 items-center gap-3">
+      <button onclick="openEligibilityModal()" class="text-xs font-semibold text-blue-600 hover:underline">Edit profile</button>
+      <button onclick="clearProfile()" class="text-xs text-blue-400 hover:text-red-500 hover:underline">Clear</button>
+    </div>
+  </div>
+-->
+
+<!-- ============================================================
+     BUILDAPIPARAMS() ADDITIONS
+     In buildApiParams(), add:
+       const studyState = val("study_state");
+       ...
+       if (studyState) params.set("study_state", studyState);
+     ============================================================ -->
+
+<!-- ============================================================
+     DORESETALLFILTERS() ADDITIONS
+     In doResetAllFilters(), add:
+       setVal("study_state", "");
+       hideProfilePill();
+     ============================================================ -->
+
+<!-- ============================================================
+     APPLYQUERYPARAMS() ADDITIONS
+     In applyQueryParams(), add:
+       setVal("study_state", urlParams.get("study_state") || "");
+     ============================================================ -->
+
+<!-- ============================================================
+     LOADFILTEROPTIONS() ADDITIONS
+     In the .then() and .catch() blocks, after applyQueryParams():
+       const _initProfile = loadProfile();
+       if (_initProfile && (_initProfile.degree_level || _initProfile.citizenship)) {
+         _applyProfileFieldsOnly(_initProfile);
+       }
+     IMPORTANT: _applyProfileFieldsOnly must be called after selects are
+     populated by loadFilterOptions, not in DOMContentLoaded.
+     ============================================================ -->
+
+<!-- ============================================================
+     ELIGIBILITY SELF-CHECK JS
+     Add this block before the "saved / bookmarks" JS block,
+     inside the <script> tag.
+
+     CRITICAL BUG TO FIX WHEN REINTEGRATING:
+     The line:
+       document.getElementById('eligibilityModal').addEventListener('click', e => {
+     MUST NOT run at script parse time, because the modal HTML is defined
+     AFTER </script>. getElementById returns null → TypeError → all
+     subsequent JS (including filter event listeners) never executes.
+
+     Fix: wrap in a DOMContentLoaded listener or move addEventListener
+     inside openEligibilityModal() / add it lazily on first open.
+     ============================================================ -->
+<script>
+  // ---------- eligibility self-check ----------
+  const PROFILE_KEY = 'om_eligibility_profile';
+
+  const DEGREE_LABELS = {
+    'high-school-leaver': 'High School Leaver',
+    undergraduate: 'Undergraduate', postgraduate: 'Postgraduate',
+    phd: 'PhD', vocational: 'Vocational',
+  };
+  const CITIZENSHIP_LABELS = {
+    citizen: 'AU Citizen', 'permanent-resident': 'Permanent Resident',
+    international: 'International Student',
+  };
+  const STATE_NAMES = { NSW:'NSW', VIC:'VIC', QLD:'QLD', WA:'WA', SA:'SA', TAS:'TAS', ACT:'ACT', NT:'NT' };
+
+  function loadProfile() {
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null'); }
+    catch (_) { return null; }
+  }
+
+  function saveProfile(profile) {
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); }
+    catch (_) {}
+  }
+
+  // Apply a profile object to the search filters and run search
+  function applyProfileToFilters(profile) {
+    // Fields with direct form mappings
+    setVal('level_of_study',    profile.degree_level  || '');
+    setVal('year_of_study',     profile.year_of_study || '');
+    setVal('citizenship_status',profile.citizenship   || '');
+    setVal('study_state',       profile.study_state   || '');
+    setVal('gender',            profile.gender        || '');
+
+    // Financial need → background_factors
+    setVal('background_factors', profile.financial_need ? 'low-income' : '');
+
+    // Field of study → tick matching industry checkbox(es)
+    document.querySelectorAll('input[name="industries"]').forEach(cb => { cb.checked = false; });
+    if (profile.field_of_study && profile.field_of_study.length) {
+      const fields = Array.isArray(profile.field_of_study) ? profile.field_of_study : [profile.field_of_study];
+      document.querySelectorAll('input[name="industries"]').forEach(cb => {
+        if (fields.includes(cb.value)) cb.checked = true;
+      });
+    }
+
+    buildActiveFilterPills();
+    showProfilePill(profile);
+    performSearch();
+  }
+
+  function showProfilePill(profile) {
+    const pill = document.getElementById('profilePill');
+    const text = document.getElementById('profilePillText');
+    if (!pill || !text) return;
+    const parts = [];
+    if (profile.degree_level)  parts.push(DEGREE_LABELS[profile.degree_level]  || profile.degree_level);
+    if (profile.citizenship)   parts.push(CITIZENSHIP_LABELS[profile.citizenship] || profile.citizenship);
+    if (profile.study_state)   parts.push(STATE_NAMES[profile.study_state] || profile.study_state);
+    if (profile.year_of_study) {
+      const yMap = { YEAR_1:'1st year', YEAR_2:'2nd year', YEAR_3:'3rd year',
+                     YEAR_4:'4th year', YEAR_5:'5th year', FINAL_YEAR:'Final year' };
+      parts.push(yMap[profile.year_of_study] || profile.year_of_study);
+    }
+    text.textContent = parts.length
+      ? 'Showing scholarships for: ' + parts.join(' · ')
+      : 'Showing scholarships matching your profile';
+    pill.classList.remove('hidden');
+  }
+
+  function hideProfilePill() {
+    const pill = document.getElementById('profilePill');
+    if (pill) pill.classList.add('hidden');
+  }
+
+  function clearProfile() {
+    doResetAllFilters(); // resets all filters AND calls hideProfilePill + performSearch
+  }
+
+  // ---- modal open / close ----
+  let _eligibilityListenerAttached = false;
+
+  function openEligibilityModal() {
+    const modal = document.getElementById('eligibilityModal');
+    if (!modal) return;
+    // Attach click delegation lazily (modal exists in DOM now)
+    if (!_eligibilityListenerAttached) {
+      modal.addEventListener('click', e => {
+        const btn = e.target.closest('[data-ec-group]');
+        if (!btn || !btn.dataset.ecValue) return;
+        const group = btn.dataset.ecGroup;
+        const isMulti = btn.dataset.ecMulti === 'true';
+        if (isMulti) {
+          _ecSetBtn(btn, btn.dataset.ecSelected !== 'true');
+        } else {
+          _ecSelect(group, btn.dataset.ecSelected === 'true' ? '' : btn.dataset.ecValue);
+        }
+      });
+      _eligibilityListenerAttached = true;
+    }
+    const profile = loadProfile();
+    if (profile) _populateModalFromProfile(profile);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEligibilityModal() {
+    const modal = document.getElementById('eligibilityModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+
+  // ---- option-button helpers (used by modal) ----
+  function _ecSelect(group, value) {
+    document.querySelectorAll(`[data-ec-group="${group}"]`).forEach(b => _ecSetBtn(b, false));
+    if (!value) return;
+    const btn = document.querySelector(`[data-ec-group="${group}"][data-ec-value="${CSS.escape(value)}"]`);
+    if (btn) _ecSetBtn(btn, true);
+  }
+
+  function _ecMultiSelect(group, values) {
+    document.querySelectorAll(`[data-ec-group="${group}"]`).forEach(b => _ecSetBtn(b, false));
+    (values || []).forEach(v => {
+      const btn = document.querySelector(`[data-ec-group="${group}"][data-ec-value="${CSS.escape(v)}"]`);
+      if (btn) _ecSetBtn(btn, true);
+    });
+  }
+
+  function _ecSetBtn(btn, active) {
+    btn.dataset.ecSelected = active ? 'true' : 'false';
+    btn.classList.toggle('border-blue-500', active);
+    btn.classList.toggle('bg-blue-50',      active);
+    btn.classList.toggle('text-blue-700',   active);
+    btn.classList.toggle('border-gray-200', !active);
+    btn.classList.toggle('text-gray-700',   !active);
+    btn.classList.toggle('bg-white',        !active);
+  }
+
+  function _ecGetSingle(group) {
+    const btn = document.querySelector(`[data-ec-group="${group}"][data-ec-selected="true"]`);
+    return btn ? btn.dataset.ecValue : '';
+  }
+
+  function _ecGetMulti(group) {
+    return Array.from(document.querySelectorAll(`[data-ec-group="${group}"][data-ec-selected="true"]`))
+                .map(b => b.dataset.ecValue);
+  }
+
+  function _populateModalFromProfile(profile) {
+    _ecSelect('degree_level',  profile.degree_level  || '');
+    _ecSelect('year_of_study', profile.year_of_study || '');
+    _ecSelect('study_load',    profile.study_load    || '');
+    _ecSelect('study_mode',    profile.study_mode    || '');
+    _ecSelect('citizenship',   profile.citizenship   || '');
+    _ecMultiSelect('field_of_study', profile.field_of_study || []);
+    const stateEl = document.getElementById('ecState');
+    if (stateEl) stateEl.value = profile.study_state || '';
+    const genderEl = document.getElementById('ecGender');
+    if (genderEl) genderEl.value = profile.gender || '';
+    const natEl = document.getElementById('ecNationality');
+    if (natEl) natEl.value = profile.nationality || '';
+    const gpaEl = document.getElementById('ecGpa');
+    if (gpaEl) gpaEl.value = profile.gpa || '';
+    const fnEl = document.getElementById('ecFinancialNeed');
+    if (fnEl) fnEl.checked = !!profile.financial_need;
+  }
+
+  // ---- modal submit ----
+  function submitEligibilityProfile() {
+    const profile = {
+      degree_level:   _ecGetSingle('degree_level'),
+      year_of_study:  _ecGetSingle('year_of_study'),
+      study_load:     _ecGetSingle('study_load'),
+      study_mode:     _ecGetSingle('study_mode'),
+      citizenship:    _ecGetSingle('citizenship'),
+      field_of_study: _ecGetMulti('field_of_study'),
+      study_state:    (document.getElementById('ecState')         || {}).value || '',
+      gender:         (document.getElementById('ecGender')        || {}).value || '',
+      nationality:    (document.getElementById('ecNationality')   || {}).value || '',
+      gpa:            (document.getElementById('ecGpa')           || {}).value || '',
+      financial_need: !!(document.getElementById('ecFinancialNeed') || {}).checked,
+    };
+    // Require at least degree level or citizenship before applying
+    if (!profile.degree_level && !profile.citizenship) {
+      document.getElementById('ecError').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('ecError').classList.add('hidden');
+    saveProfile(profile);
+    closeEligibilityModal();
+    applyProfileToFilters(profile);
+  }
+
+  // ---- fields-only apply (no search trigger) — called from loadFilterOptions ----
+  function _applyProfileFieldsOnly(profile) {
+    setVal('level_of_study',    profile.degree_level  || '');
+    setVal('year_of_study',     profile.year_of_study || '');
+    setVal('citizenship_status',profile.citizenship   || '');
+    setVal('study_state',       profile.study_state   || '');
+    setVal('gender',            profile.gender        || '');
+    setVal('background_factors', profile.financial_need ? 'low-income' : '');
+    document.querySelectorAll('input[name="industries"]').forEach(cb => { cb.checked = false; });
+    if (profile.field_of_study && profile.field_of_study.length) {
+      const fields = Array.isArray(profile.field_of_study) ? profile.field_of_study : [profile.field_of_study];
+      document.querySelectorAll('input[name="industries"]').forEach(cb => {
+        if (fields.includes(cb.value)) cb.checked = true;
+      });
+    }
+    showProfilePill(profile);
+  }
+</script>
+
+<!-- ============================================================
+     ELIGIBILITY SELF-CHECK MODAL HTML
+     Add before "Saved Scholarships Drawer" comment block,
+     after </script>
+     ============================================================ -->
+
+  <!-- ===== Eligibility Self-Check Modal ===== -->
+  <div id="eligibilityModal" class="fixed inset-0 z-50 hidden items-end justify-center p-0 sm:items-center sm:p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeEligibilityModal()"></div>
+    <div class="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl" style="max-height:92vh;">
+
+      <!-- Modal header -->
+      <div class="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Check My Eligibility</h2>
+          <p class="mt-0.5 text-xs text-gray-500">Tell us about yourself to find scholarships you qualify for</p>
+        </div>
+        <button onclick="closeEligibilityModal()" class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Modal body (scrollable) -->
+      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+        <!-- Error -->
+        <div id="ecError" class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          Please select at least your degree level or citizenship status.
+        </div>
+
+        <!-- ① Degree level -->
+        <div>
+          <p class="mb-2.5 text-sm font-semibold text-gray-800">What level are you studying? <span class="text-red-400">*</span></p>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="degree_level" data-ec-value="high-school-leaver">🏫 High School Leaver</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="degree_level" data-ec-value="undergraduate">🎓 Undergraduate</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="degree_level" data-ec-value="postgraduate">📚 Postgraduate</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="degree_level" data-ec-value="phd">🔬 PhD / HDR</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="degree_level" data-ec-value="vocational">🛠️ Vocational / TAFE</button>
+          </div>
+        </div>
+
+        <!-- ② Year of study -->
+        <div>
+          <p class="mb-2.5 text-sm font-semibold text-gray-800">What year are you in? <span class="text-gray-400 font-normal text-xs">(optional)</span></p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="year_of_study" data-ec-value="YEAR_1">1st year</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="year_of_study" data-ec-value="YEAR_2">2nd year</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="year_of_study" data-ec-value="YEAR_3">3rd year</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="year_of_study" data-ec-value="YEAR_4">4th year</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="year_of_study" data-ec-value="YEAR_5">5th year</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="year_of_study" data-ec-value="FINAL_YEAR">Final year</button>
+          </div>
+        </div>
+
+        <!-- ③ Study load + mode side by side -->
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <p class="mb-2.5 text-sm font-semibold text-gray-800">Study load <span class="text-gray-400 font-normal text-xs">(optional)</span></p>
+            <div class="flex gap-2">
+              <button type="button" class="ec-opt flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="study_load" data-ec-value="FULL_TIME">⏰ Full-time</button>
+              <button type="button" class="ec-opt flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="study_load" data-ec-value="PART_TIME">🕑 Part-time</button>
+            </div>
+          </div>
+          <div>
+            <p class="mb-2.5 text-sm font-semibold text-gray-800">Study mode <span class="text-gray-400 font-normal text-xs">(optional)</span></p>
+            <div class="flex gap-2">
+              <button type="button" class="ec-opt flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="study_mode" data-ec-value="ON_CAMPUS">🏛️ On campus</button>
+              <button type="button" class="ec-opt flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="study_mode" data-ec-value="ONLINE">💻 Online</button>
+              <button type="button" class="ec-opt flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="study_mode" data-ec-value="HYBRID">🔀 Hybrid</button>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-gray-100">
+
+        <!-- ④ Citizenship -->
+        <div>
+          <p class="mb-2.5 text-sm font-semibold text-gray-800">What is your citizenship / residency status? <span class="text-red-400">*</span></p>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="citizenship" data-ec-value="citizen">🇦🇺 Australian Citizen</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="citizenship" data-ec-value="permanent-resident">📋 Permanent Resident</button>
+            <button type="button" class="ec-opt rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="citizenship" data-ec-value="international">✈️ International Student</button>
+          </div>
+        </div>
+
+        <!-- ⑤ State + Nationality side by side -->
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="ecState" class="mb-2 block text-sm font-semibold text-gray-800">State / Territory <span class="text-gray-400 font-normal text-xs">(optional)</span></label>
+            <select id="ecState" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <option value="">Any state</option>
+              <option value="NSW">New South Wales</option>
+              <option value="VIC">Victoria</option>
+              <option value="QLD">Queensland</option>
+              <option value="WA">Western Australia</option>
+              <option value="SA">South Australia</option>
+              <option value="TAS">Tasmania</option>
+              <option value="ACT">Australian Capital Territory</option>
+              <option value="NT">Northern Territory</option>
+            </select>
+          </div>
+          <div>
+            <label for="ecNationality" class="mb-2 block text-sm font-semibold text-gray-800">Nationality <span class="text-gray-400 font-normal text-xs">(optional)</span></label>
+            <select id="ecNationality" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100">
+              <option value="">Select country</option>
+              <option value="AU">Australia</option>
+              <option value="CN">China</option>
+              <option value="IN">India</option>
+              <option value="ID">Indonesia</option>
+              <option value="VN">Vietnam</option>
+              <option value="KR">South Korea</option>
+              <option value="JP">Japan</option>
+              <option value="MY">Malaysia</option>
+              <option value="PH">Philippines</option>
+              <option value="TH">Thailand</option>
+              <option value="NZ">New Zealand</option>
+              <option value="GB">United Kingdom</option>
+              <option value="US">United States</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <hr class="border-gray-100">
+
+        <!-- ⑥ Gender (optional) -->
+        <div>
+          <label for="ecGender" class="mb-2 block text-sm font-semibold text-gray-800">Gender <span class="text-gray-400 font-normal text-xs">(optional — some scholarships are gender-specific)</span></label>
+          <select id="ecGender" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <option value="">Prefer not to say</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="non-binary">Non-binary</option>
+          </select>
+        </div>
+
+        <!-- ⑦ Field of study (multi-select) -->
+        <div>
+          <p class="mb-2.5 text-sm font-semibold text-gray-800">Field of study <span class="text-gray-400 font-normal text-xs">(optional — select all that apply)</span></p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="ec-opt rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="field_of_study" data-ec-value="stem" data-ec-multi="true">🔬 STEM</button>
+            <button type="button" class="ec-opt rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="field_of_study" data-ec-value="health" data-ec-multi="true">⚕️ Health</button>
+            <button type="button" class="ec-opt rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="field_of_study" data-ec-value="business" data-ec-multi="true">💼 Business</button>
+            <button type="button" class="ec-opt rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="field_of_study" data-ec-value="arts" data-ec-multi="true">🎨 Arts &amp; Humanities</button>
+            <button type="button" class="ec-opt rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="field_of_study" data-ec-value="education" data-ec-multi="true">📖 Education</button>
+            <button type="button" class="ec-opt rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="field_of_study" data-ec-value="law" data-ec-multi="true">⚖️ Law</button>
+            <button type="button" class="ec-opt rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="field_of_study" data-ec-value="trades" data-ec-multi="true">🔧 Trades</button>
+            <button type="button" class="ec-opt rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-all hover:border-blue-300 hover:bg-blue-50" data-ec-group="field_of_study" data-ec-value="agriculture" data-ec-multi="true">🌾 Agriculture</button>
+          </div>
+        </div>
+
+        <!-- ⑧ GPA + Financial need side by side -->
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="ecGpa" class="mb-2 block text-sm font-semibold text-gray-800">GPA / WAM <span class="text-gray-400 font-normal text-xs">(optional)</span></label>
+            <input id="ecGpa" type="text" placeholder="e.g. 6.5 or 75" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <p class="mt-1 text-xs text-gray-400">Saved for your reference — not used to filter results yet</p>
+          </div>
+          <div class="flex flex-col justify-center">
+            <p class="mb-2 text-sm font-semibold text-gray-800">Financial need <span class="text-gray-400 font-normal text-xs">(optional)</span></p>
+            <label class="flex cursor-pointer items-center gap-3">
+              <input id="ecFinancialNeed" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700">I am looking for need-based scholarships</span>
+            </label>
+          </div>
+        </div>
+
+      </div><!-- end body -->
+
+      <!-- Modal footer -->
+      <div class="shrink-0 border-t border-gray-100 px-6 py-4">
+        <div class="flex items-center justify-between gap-3">
+          <button type="button" onclick="closeEligibilityModal()" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700">Cancel</button>
+          <button type="button" onclick="submitEligibilityProfile()" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0118 0z"/>
+            </svg>
+            Show matching scholarships
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

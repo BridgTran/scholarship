@@ -119,18 +119,90 @@ BOILERPLATE_RE = [
     re.compile(r'\bteqsa\b',        re.IGNORECASE),
 ]
 
-# Serper queries for Australian scholarship discovery
+# Domains that consistently produce aggregator listings, US pages, or noise.
+# URLs from these domains are dropped before any fetching or extraction.
+BLOCKED_DOMAINS = {
+    # Aggregator / scholarship search engines
+    'scholarshipdb.net', 'scholarlify.com', 'scholarshipbob.com',
+    'gooduniversitiesguide.com.au', 'myfuture.edu.au',
+    'careerharvest.com.au', 'pickmyuni.com',
+    # Study-abroad / international aggregators
+    'studyabroad.careers360.com', 'gooverseas.com', 'iesabroad.org',
+    'lumiere-education.com', 'edu-live.com',
+    # US-focused sites that slip through AU queries
+    'teenlife.com', 'ucumberlands.edu', 'rsmus.com',
+    # Social / unreliable
+    'facebook.com', 'reddit.com', 'quora.com',
+    # PDF-only paths handled separately
+    # Slipped through in initial runs — added after review
+    'scholarship-positions.com', 'opportunitiesinfo.com', 'kisacademics.com',
+    'isunet.edu', 'pakadmissions.com', 'instagram.com',
+}
+
+# Serper queries for Australian scholarship discovery.
+# Ordered so the first N queries (--batches N) give broad category coverage.
+# Queries are written to surface individual scholarship pages, not listing pages.
 DISCOVERY_QUERIES = [
-    'Australian undergraduate scholarship 2025 apply eligibility',
-    'scholarship grant Australia university 2025 site:edu.au',
-    'postgraduate scholarship Australia 2025 applications open',
-    'Indigenous Australian scholarship 2025 university',
-    'need-based scholarship Australia 2025 financial hardship',
-    'merit scholarship Australian university 2025',
-    'rural regional scholarship Australia 2025 students',
-    'women STEM scholarship Australia 2025',
-    'disability scholarship Australia university 2025',
-    'first generation university scholarship Australia 2025',
+    # ── 1. UNDERGRADUATE – major universities ────────────────────────────────
+    'site:unimelb.edu.au scholarship undergraduate 2025 "applications open" eligibility',
+    'site:sydney.edu.au scholarship undergraduate 2025 "apply now" eligibility criteria',
+    'site:unsw.edu.au scholarship undergraduate 2025 "applications open" eligibility',
+    'site:monash.edu scholarship undergraduate 2025 "apply now" eligibility',
+    'site:anu.edu.au scholarship undergraduate 2025 "applications open" eligibility',
+    'site:uq.edu.au scholarship undergraduate 2025 "apply now" eligibility criteria',
+    'site:uwa.edu.au scholarship undergraduate 2025 "applications open" eligibility',
+    'site:adelaide.edu.au scholarship undergraduate 2025 "apply now" eligibility',
+
+    # ── 2. INTERNATIONAL STUDENTS ────────────────────────────────────────────
+    '"international student" scholarship "Australian university" 2025 "apply now" eligibility',
+    'site:unimelb.edu.au "international student" scholarship 2025 eligibility tuition',
+    'site:sydney.edu.au "international" scholarship 2025 "apply now" eligibility',
+    'site:unsw.edu.au "international student" scholarship 2025 eligibility',
+    '"international excellence" OR "global scholarship" Australian university 2025 eligibility apply',
+    'Australia "international student" scholarship stipend 2025 "applications open"',
+
+    # ── 3. POSTGRADUATE & HDR ────────────────────────────────────────────────
+    'site:unimelb.edu.au postgraduate scholarship 2025 "applications open" eligibility',
+    'site:anu.edu.au HDR PhD scholarship 2025 stipend "apply now" eligibility',
+    'site:unsw.edu.au postgraduate research scholarship 2025 eligibility "apply now"',
+    'site:monash.edu PhD scholarship 2025 "applications open" stipend eligibility',
+    '"research training program" scholarship Australia university 2025 eligibility apply',
+    'masters scholarship Australia university 2025 "applications open" eligibility criteria',
+
+    # ── 4. NSW & VIC STATE-SPECIFIC ──────────────────────────────────────────
+    '"New South Wales" government scholarship 2025 university study "apply now" eligibility',
+    'NSW scholarship 2025 university undergraduate "applications open" eligibility criteria',
+    '"Study NSW" scholarship 2025 international domestic eligibility apply',
+    'Victoria government scholarship 2025 university study "apply now" eligibility',
+    '"Study Melbourne" scholarship 2025 eligibility "apply now" undergraduate',
+    'Victorian government scholarship university 2025 "applications open" eligibility',
+
+    # ── 5. NEED-BASED & HARDSHIP ─────────────────────────────────────────────
+    '"financial hardship" scholarship Australian university 2025 "apply now" eligibility',
+    '"equity scholarship" Australia university 2025 "low income" eligibility apply',
+    '"need-based" scholarship Australian university 2025 "applications open" eligibility',
+    'hardship bursary scholarship Australia university 2025 "apply now" eligibility criteria',
+    '"financial need" scholarship Australia undergraduate 2025 "applications open"',
+
+    # ── 6. WOMEN IN STEM ─────────────────────────────────────────────────────
+    '"women in STEM" scholarship Australia university 2025 "apply now" eligibility',
+    'women engineering scholarship Australian university 2025 "applications open" eligibility',
+    '"female student" STEM scholarship Australia 2025 "apply now" eligibility criteria',
+    'women technology computing scholarship Australia university 2025 eligibility apply',
+    '"women in science" scholarship Australia 2025 "applications open" eligibility',
+
+    # ── 7. INDIGENOUS AUSTRALIAN ─────────────────────────────────────────────
+    '"Aboriginal and Torres Strait Islander" scholarship university 2025 "apply now" eligibility',
+    '"First Nations" scholarship Australian university 2025 "applications open" eligibility',
+    '"Indigenous" scholarship Australia university 2025 "apply now" eligibility criteria',
+    'Aboriginal scholarship university Australia 2025 "applications open" eligibility',
+    'site:unimelb.edu.au Indigenous Aboriginal scholarship 2025 eligibility apply',
+
+    # ── 8. FIRST-GENERATION UNIVERSITY STUDENTS ──────────────────────────────
+    '"first in family" scholarship Australia university 2025 "apply now" eligibility',
+    '"first generation" university scholarship Australia 2025 "applications open" eligibility',
+    '"first in family" bursary scholarship Australian university 2025 eligibility criteria',
+    '"first generation" scholarship Australia undergraduate 2025 "apply now"',
 ]
 
 # Heuristic extraction patterns
@@ -615,11 +687,17 @@ def _insert_scholarships_from_list(conn, scholarships: list) -> tuple[int, int, 
 
 # ── Import modes ─────────────────────────────────────────────────────────────
 
-def do_discover(prompt_path: str, batch_size: int = 10, batch_total: int = 5) -> list[int]:
+def do_discover(
+    prompt_path: str,
+    batch_size: int = 10,
+    batch_total: int = 5,
+    dry_run: bool = False,
+) -> list[int]:
     """Discover scholarship URLs via Serper (Google) search, then extract and insert.
 
     batch_total = number of queries to run from DISCOVERY_QUERIES
     batch_size  = results per query (Serper 'num' parameter)
+    dry_run     = if True, print new URLs and exit without fetching or inserting
     """
     queries   = DISCOVERY_QUERIES[:batch_total]
     all_urls: list[str] = []
@@ -637,6 +715,19 @@ def do_discover(prompt_path: str, batch_size: int = 10, batch_total: int = 5) ->
     # Deduplicate while preserving order
     all_urls = list(dict.fromkeys(all_urls))
 
+    # Filter out blocked domains
+    def _is_blocked(url: str) -> bool:
+        try:
+            host = urlparse(url).hostname or ''
+            return any(host == d or host.endswith('.' + d) for d in BLOCKED_DOMAINS)
+        except Exception:
+            return False
+
+    pre_block = len(all_urls)
+    all_urls = [u for u in all_urls if not _is_blocked(u)]
+    if pre_block - len(all_urls):
+        logging.info('Blocked %d URLs from aggregator/noise domains', pre_block - len(all_urls))
+
     # Filter URLs already in the database
     with engine.connect() as conn:
         existing_urls = {
@@ -645,9 +736,24 @@ def do_discover(prompt_path: str, batch_size: int = 10, batch_total: int = 5) ->
             ).fetchall()
         }
 
+    known_count = len(all_urls) - len([u for u in all_urls if u not in existing_urls])
     new_urls = [u for u in all_urls if u not in existing_urls]
     logging.info('Discovered %d new URLs after filtering %d already-known',
-                 len(new_urls), len(all_urls) - len(new_urls))
+                 len(new_urls), known_count)
+
+    if dry_run:
+        print(f'\n{"─" * 60}')
+        print(f'DRY RUN — discovery results ({batch_total} queries × up to {batch_size} results)')
+        print(f'{"─" * 60}')
+        print(f'  Total URLs found:    {len(all_urls)}')
+        print(f'  Already in DB:       {known_count}')
+        print(f'  New (would import):  {len(new_urls)}')
+        if new_urls:
+            print(f'\nNew URLs:')
+            for i, u in enumerate(new_urls, 1):
+                print(f'  {i:3}. {u}')
+        print(f'\nRe-run without --dry-run to import these {len(new_urls)} scholarships.')
+        return []
 
     if not new_urls:
         logging.info('No new URLs to process.')
@@ -1228,6 +1334,8 @@ def main():
                             help='Number of Serper queries to run (default: 5)')
     p_discover.add_argument('--per-batch', type=int, default=10,
                             help='Results per query (default: 10)')
+    p_discover.add_argument('--dry-run',   action='store_true',
+                            help='Show new URLs found without fetching or importing them')
 
     # from-urls
     p_urls = sub.add_parser('from-urls', help='Scrape from a URL list file')
@@ -1265,8 +1373,14 @@ def main():
         print('Install with: pip install httpx beautifulsoup4 lxml anthropic')
 
     if args.command == 'discover':
-        ids = do_discover(args.prompt, batch_size=args.per_batch, batch_total=args.batches)
-        print(f'Done. Inserted IDs: {ids}')
+        ids = do_discover(
+            args.prompt,
+            batch_size=args.per_batch,
+            batch_total=args.batches,
+            dry_run=args.dry_run,
+        )
+        if not args.dry_run:
+            print(f'Done. Inserted IDs: {ids}')
 
     elif args.command == 'from-urls':
         urls = read_urls_file(args.urls_file)
