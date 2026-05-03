@@ -156,7 +156,8 @@ def search_scholarships():
                 params,
                 ['demographic', 'demographics'],
                 parse_list_param(gender),
-                'gender'
+                'gender',
+                criteria_key='gender'
             )
 
         if background_factors:
