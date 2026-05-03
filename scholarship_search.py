@@ -225,6 +225,20 @@ def search_scholarships():
                 'residency_status',
                 criteria_key='residency_status'
             )
+        else:
+            # Default: hide international-only scholarships so domestic students
+            # don't see results they're ineligible for. Users can opt in by
+            # selecting "International" from the Citizenship filter.
+            where_conditions.append(
+                "NOT EXISTS ("
+                "SELECT 1 FROM eligibility_criteria ec "
+                "WHERE ec.scholarship_id = s.id "
+                "AND ec.criteria_type IN ('demographic', 'demographics') "
+                "AND ec.criteria_key = 'residency_status' "
+                "AND ec.required_value = 'INTERNATIONAL' "
+                "AND ec.is_required = 1"
+                ")"
+            )
 
         if nationality:
             add_criteria_filter(
@@ -288,6 +302,7 @@ def search_scholarships():
                 s.title,
                 s.description,
                 s.amount,
+                s.benefits_text,
                 s.deadline,
                 s.industry,
                 s.status,
@@ -376,6 +391,8 @@ def search_scholarships():
                 amount_display = None
                 if amount_value is not None and 0 < amount_value < 1:
                     amount_display = f"{amount_value * 100:.0f}% tuition contribution"
+                elif amount_value is None and row.benefits_text:
+                    amount_display = row.benefits_text
                 scholarships.append({
                     'id': row.id,
                     'title': row.title,
