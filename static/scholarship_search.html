@@ -7,6 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scholarship Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
   </head>
   <body class="bg-gradient-to-b from-gray-50 to-white text-gray-900 antialiased">
     
@@ -495,6 +503,9 @@
 
   <!-- Results list -->
   <div id="resultsList" class="space-y-6"></div>
+
+  <!-- Pagination controls -->
+  <div id="paginationControls" class="mt-6"></div>
 </div>
 
 
@@ -535,6 +546,11 @@
 
   // ---------- search request controller (race condition guard) ----------
   let currentSearchController = null;
+
+  // ---------- pagination state ----------
+  let currentPage = 1;
+  let totalPages  = 1;
+  let totalItems  = 0;
 
   // ---------- element refs ----------
   const searchForm = $("searchForm");
@@ -577,7 +593,14 @@
     if (!resultsHeader) return;
     resultsHeader.classList.toggle("hidden", !visible);
     if (visible && resultsCount) {
-      resultsCount.textContent = `Found ${count} scholarships`;
+      if (totalItems > 0) {
+        const perPage = 20;
+        const from = (currentPage - 1) * perPage + 1;
+        const to   = Math.min(currentPage * perPage, totalItems);
+        resultsCount.textContent = `Showing ${from}–${to} of ${totalItems} scholarship${totalItems !== 1 ? 's' : ''}`;
+      } else {
+        resultsCount.textContent = `Found ${count} scholarship${count !== 1 ? 's' : ''}`;
+      }
     }
   }
 
@@ -606,7 +629,7 @@
       setVal(filterId, "");
     }
     buildActiveFilterPills();
-    performSearch();
+    performSearchFromFilter();
   }
 
   function buildActiveFilterPills() {
@@ -714,7 +737,7 @@
     setVal("year_of_study", "");
     document.querySelectorAll('input[name="industries"]').forEach((i) => (i.checked = false));
     buildActiveFilterPills();
-    performSearch();
+    performSearchFromFilter();
   }
 
   if (clearAllFiltersInline) {
@@ -874,6 +897,34 @@
     return `<span class="inline-flex items-center gap-0.5 rounded-full border ${cls} px-2 py-0.5 text-[10px] font-medium">${escapeHtml(badge.emoji)} ${escapeHtml(badge.label)}</span>`;
   }
 
+  // ---------- competitiveness pill ----------
+  function computeCompetitiveness(s) {
+    let score = 0;
+    const amt = s.amount || 0;
+    if      (amt >= 15000) score += 3;
+    else if (amt >= 5000)  score += 2;
+    else if (amt >= 1000)  score += 1;
+    if      (s.scholarship_type === 'Merit-Based')     score += 2;
+    else if (s.scholarship_type === 'Merit-And-Need')  score += 1;
+    if (s.gender_hint && s.gender_hint !== 'ANY')      score -= 1;
+    if (s.institution_hint)                            score -= 1;
+    return Math.max(0, score);
+  }
+
+  function competitivenessPill(s) {
+    const score = computeCompetitiveness(s);
+    let label, emoji, color;
+    if      (score >= 4) { label = 'Highly Competitive'; emoji = '🔥'; color = 'rose';  }
+    else if (score >= 2) { label = 'Competitive';        emoji = '⚡'; color = 'amber'; }
+    else                 { label = 'Low Competition';    emoji = '✅'; color = 'green'; }
+    const colorMap = {
+      rose:  'bg-rose-50 border-rose-100 text-rose-700',
+      amber: 'bg-amber-50 border-amber-100 text-amber-700',
+      green: 'bg-green-50 border-green-100 text-green-700',
+    };
+    return `<span class="inline-flex items-center gap-0.5 rounded-full border ${colorMap[color]} px-2 py-0.5 text-[10px] font-medium">${emoji} ${label}</span>`;
+  }
+
   // ---------- results rendering ----------
 function renderResults(scholarships) {
   if (!resultsList) return;
@@ -903,8 +954,9 @@ function renderResults(scholarships) {
     const deadlineText = formatDate(scholarship.deadline);  // null if no deadline
     const urgency = urgencyBadge(days);
     const { badges, lines } = buildEligibilityHints(scholarship);
-    const badgesHtml = badges.length
-      ? `<div class="mt-2 flex flex-wrap gap-1">${badges.map(badgePill).join('')}</div>`
+    const compPill = competitivenessPill(scholarship);
+    const badgesHtml = (badges.length || compPill)
+      ? `<div class="mt-2 flex flex-wrap gap-1">${badges.map(badgePill).join('')}${compPill}</div>`
       : '';
 
     card.innerHTML = `
@@ -1028,11 +1080,22 @@ function renderResults(scholarships) {
       <div class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-blue-500/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100"></div>
     `;
 
+    // GA4: track card impression
+    gtag('event', 'scholarship_viewed', {
+      scholarship_id:   scholarship.id,
+      scholarship_title: scholarship.title,
+      scholarship_type: scholarship.scholarship_type || 'unknown',
+    });
+
     // View button
     const viewBtn = card.querySelector('.js-view-btn');
     if (viewBtn) {
       viewBtn.onclick = (e) => {
         e.stopPropagation();
+        gtag('event', 'apply_clicked', {
+          scholarship_id:    scholarship.id,
+          scholarship_title: scholarship.title,
+        });
         window.location.href = `/scholarship/${scholarship.id}`;
       };
     }
@@ -1048,6 +1111,10 @@ function renderResults(scholarships) {
       }
       compareBtn.onclick = (e) => {
         e.stopPropagation();
+        gtag('event', 'compare_clicked', {
+          scholarship_id:    scholarship.id,
+          scholarship_title: scholarship.title,
+        });
         toggleCompare(scholarship);
       };
     }
@@ -1066,6 +1133,11 @@ function renderResults(scholarships) {
         _setBookmarkActive(bookmarkBtn, !active);
         _persistSaved();
         _updateSavedBadge();
+        gtag('event', 'scholarship_bookmarked', {
+          scholarship_id:    scholarship.id,
+          scholarship_title: scholarship.title,
+          action:            active ? 'removed' : 'saved',
+        });
       });
     }
 
@@ -1192,6 +1264,9 @@ function getDaysTextCompact(days) {
 
     if (recentlyClosed) params.set("recently_closed", "1");
 
+    params.set("page", currentPage);
+    params.set("per_page", 20);
+
     return params;
   }
 
@@ -1271,8 +1346,43 @@ function getDaysTextCompact(days) {
 
   }
 
+  // ---------- pagination rendering ----------
+  function renderPagination() {
+    const el = $('paginationControls');
+    if (!el) return;
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+    const btnBase = 'inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors';
+    const btnActive = `${btnBase} border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100`;
+    const btnNormal = `${btnBase} border-gray-200 bg-white text-gray-700 hover:bg-gray-50`;
+    const btnDisabled = `${btnBase} border-gray-100 bg-white text-gray-300 cursor-not-allowed`;
+
+    el.innerHTML = `
+      <div class="flex items-center justify-between pt-2">
+        <button id="prevPageBtn"
+          class="${currentPage <= 1 ? btnDisabled : btnNormal}"
+          ${currentPage <= 1 ? 'disabled' : ''}>
+          ← Previous
+        </button>
+        <span class="text-sm text-gray-600">Page ${currentPage} of ${totalPages}</span>
+        <button id="nextPageBtn"
+          class="${currentPage >= totalPages ? btnDisabled : btnNormal}"
+          ${currentPage >= totalPages ? 'disabled' : ''}>
+          Next →
+        </button>
+      </div>`;
+
+    on($('prevPageBtn'), 'click', () => {
+      if (currentPage > 1) { currentPage--; performSearch(true); }
+    });
+    on($('nextPageBtn'), 'click', () => {
+      if (currentPage < totalPages) { currentPage++; performSearch(true); }
+    });
+  }
+
   // ---------- main search ----------
-  function performSearch() {
+  // scrollToResults: true when paginating (don't jump on initial load)
+  function performSearch(scrollToResults = false) {
     setLoading(true);
     setError(false);
     setEmpty(false);
@@ -1281,6 +1391,16 @@ function getDaysTextCompact(days) {
 
     const apiParams = buildApiParams();
     syncUrlToForm();
+
+    // GA4: track filter/search usage
+    if (currentPage === 1) {
+      gtag('event', 'filter_used', {
+        search_query:      val('search') || '',
+        citizenship:       val('citizenship_status') || 'domestic',
+        scholarship_type:  val('scholarship_type') || '',
+        level_of_study:    val('level_of_study') || '',
+      });
+    }
 
     // Cancel any previous in-flight request so stale results never overwrite newer ones
     if (currentSearchController) currentSearchController.abort();
@@ -1294,28 +1414,40 @@ function getDaysTextCompact(days) {
       .then((data) => {
         setLoading(false);
 
-        const scholarships = Array.isArray(data.scholarships)
-          ? data.scholarships
-          : [];
+        // Update pagination state from response
+        const pagination = data.pagination || {};
+        totalItems = pagination.total_items || 0;
+        totalPages = pagination.total_pages || 1;
+
+        const scholarships = Array.isArray(data.scholarships) ? data.scholarships : [];
 
         if (!scholarships.length) {
           setEmpty(true);
           if (resultsList) resultsList.innerHTML = "";
           setResultsHeader(false, 0);
+          renderPagination();
           return;
         }
 
         renderResults(scholarships);
-        if (resultsHeader) {
+        renderPagination();
+
+        if (scrollToResults && resultsHeader) {
           setTimeout(() => resultsHeader.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
         }
       })
       .catch((err) => {
-        if (err.name === 'AbortError') return; // stale request superseded by a newer one — ignore
+        if (err.name === 'AbortError') return;
         console.error("Search error:", err);
         setLoading(false);
         setError(true);
       });
+  }
+
+  // Reset to page 1 whenever filters change (not pagination buttons)
+  function performSearchFromFilter() {
+    currentPage = 1;
+    performSearch();
   }
 
   // ---------- options population ----------
@@ -1408,7 +1540,7 @@ function getDaysTextCompact(days) {
             input.value = value;
             input.className =
               "h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900";
-            input.addEventListener("change", performSearch);
+            input.addEventListener("change", performSearchFromFilter);
 
             const span = document.createElement("span");
             span.textContent = labelText;
@@ -1420,27 +1552,27 @@ function getDaysTextCompact(days) {
         }
 
         applyQueryParams();
-        performSearch();
+        performSearchFromFilter();
       })
       .catch((error) => {
         console.error("Filter options error:", error);
         applyQueryParams();
-        performSearch();
+        performSearchFromFilter();
       });
   }
 
   // ---------- event wiring ----------
   on(searchForm, "submit", (event) => {
     event.preventDefault();
-    performSearch();
+    performSearchFromFilter();
   });
 
   on(toggleAdvancedButton, "click", toggleAdvancedFilters);
 
-  // Run search when selects/checkboxes change (your original behavior)
+  // Run search when selects/checkboxes change — always reset to page 1
   document
     .querySelectorAll('#searchForm select, #searchForm input[type="checkbox"]')
-    .forEach((input) => input.addEventListener("change", performSearch));
+    .forEach((input) => input.addEventListener("change", performSearchFromFilter));
 
   // Debounced typing for search box
   let searchTimeout;
@@ -1449,19 +1581,19 @@ function getDaysTextCompact(days) {
     .forEach((input) =>
       input.addEventListener("input", () => {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(performSearch, 400);
+        searchTimeout = setTimeout(performSearchFromFilter, 400);
       })
     );
 
   on(clearFiltersButton, "click", doResetAllFilters);
 
   // Error state buttons
-  on($('retryButton'),   'click', () => { setError(false); performSearch(); });
+  on($('retryButton'),   'click', () => { setError(false); performSearchFromFilter(); });
   on($('refreshButton'), 'click', () => window.location.reload());
 
   window.addEventListener("popstate", () => {
     applyQueryParams();
-    performSearch();
+    performSearchFromFilter();
   });
 
   // ---------- saved / bookmarks ----------

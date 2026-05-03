@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scholarship Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
   </head>
   <body class="bg-gradient-to-b from-gray-50 to-white text-gray-900 antialiased">
     <div class="relative min-h-screen overflow-hidden bg-gradient-to-b from-gray-50 to-white">
@@ -892,7 +900,11 @@
             applyLink.textContent = '🎯 Apply for This Scholarship';
             applyLink.addEventListener('click', function(event) {
               const confirmed = confirm('You will be redirected to the official application page. Continue?');
-              if (!confirmed) event.preventDefault();
+              if (!confirmed) { event.preventDefault(); return; }
+              gtag('event', 'apply_clicked', {
+                scholarship_id:    scholarshipId,
+                scholarship_title: document.title,
+              });
             });
 
             const hint = document.createElement('p');
@@ -1006,6 +1018,12 @@
             mainContent.classList.remove('hidden');
             renderScholarship(data);
             showDeadlineWarnings(data.deadline);
+            gtag('event', 'scholarship_viewed', {
+              scholarship_id:    data.id,
+              scholarship_title: data.title,
+              scholarship_type:  data.scholarship_type || 'unknown',
+              organization:      (data.organization || {}).name || '',
+            });
           })
           .catch((error) => {
             hideLoading();
