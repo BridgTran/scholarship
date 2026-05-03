@@ -107,6 +107,32 @@ FREEMASONS_NOTE = (
 # ---------------------------------------------------------------------------
 TARGETS = [
     {
+        'url': 'https://www.nswtf.org.au/news/2025/10/16/2026-public-education-foundation-scholarships/',
+        'title_contains': 'Teachers Health Early Career',
+        'overrides': {
+            'status': 'draft',
+            'deadline': '2026-10-27',        # 2025 round closed; set to 2026 cycle
+            'scholarship_type': 'Merit-Based',
+        },
+    },
+    {
+        'url': 'https://www.nswtf.org.au/news/2025/10/16/2026-public-education-foundation-scholarships/',
+        'title_contains': 'AFTRS',
+        'overrides': {
+            'status': 'draft',
+            'deadline': '2026-10-28',        # 2025 round closed; set to 2026 cycle
+            'scholarship_type': 'Need-Based', # refugee equity scholarship
+            'org_name': 'Australia for UNHCR',
+            'industry': 'Arts',
+        },
+    },
+]
+
+# ---------------------------------------------------------------------------
+# Legacy targets (already imported — kept for reference, not re-run)
+# ---------------------------------------------------------------------------
+_LEGACY_TARGETS = [
+    {
         'url': 'https://www.nswtf.org.au/news/2026/02/04/applications-now-open-for-federations-4000-future-teacher-scholarships/',
         'title_contains': 'Future Teacher',
         'overrides': {'status': 'active'},
@@ -152,7 +178,7 @@ TARGETS = [
             'append_description': FREEMASONS_NOTE,
         },
     },
-]
+]  # end _LEGACY_TARGETS
 
 # ---------------------------------------------------------------------------
 # Fetch + extract, cache per URL to avoid hitting the same page twice
@@ -223,6 +249,12 @@ for target in TARGETS:
 
     if 'industry' in overrides:
         s['industry'] = overrides['industry']
+
+    if 'deadline' in overrides:
+        s['deadline'] = overrides['deadline']
+
+    if 'scholarship_type' in overrides:
+        s['scholarship_type'] = overrides['scholarship_type']
 
     # Sanitize before validation
     s = sanitize_scholarship(s)
