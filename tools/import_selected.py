@@ -106,26 +106,7 @@ FREEMASONS_NOTE = (
 # URLs to import and the title filter/key to identify each one
 # ---------------------------------------------------------------------------
 TARGETS = [
-    {
-        'url': 'https://www.nswtf.org.au/news/2025/10/16/2026-public-education-foundation-scholarships/',
-        'title_contains': 'Teachers Health Early Career',
-        'overrides': {
-            'status': 'draft',
-            'deadline': '2026-10-27',        # 2025 round closed; set to 2026 cycle
-            'scholarship_type': 'Merit-Based',
-        },
-    },
-    {
-        'url': 'https://www.nswtf.org.au/news/2025/10/16/2026-public-education-foundation-scholarships/',
-        'title_contains': 'AFTRS',
-        'overrides': {
-            'status': 'draft',
-            'deadline': '2026-10-28',        # 2025 round closed; set to 2026 cycle
-            'scholarship_type': 'Need-Based', # refugee equity scholarship
-            'org_name': 'Australia for UNHCR',
-            'industry': 'Arts',
-        },
-    },
+    # Add new import targets here. Clear after each run to avoid re-importing.
 ]
 
 # ---------------------------------------------------------------------------
