@@ -763,6 +763,11 @@ def insert_criteria(conn, scholarship_id: int, criteria: dict, source_url: str =
         criteria_type, criteria_key,
         str(criteria.get('required_value', '')).strip(),
     )
+    # Truncate to VARCHAR column limit; log if trimmed so data loss is visible.
+    if criteria_value and len(criteria_value) > 255:
+        logging.debug('  Truncating required_value (%d chars) for %s/%s',
+                      len(criteria_value), criteria_type, criteria_key)
+        criteria_value = criteria_value[:255]
     conn.execute(
         text('''
             INSERT INTO eligibility_criteria
@@ -1039,11 +1044,30 @@ def _replace_criteria(conn, scholarship_id: int, criteria_list: list,
                       source_url: str = None) -> tuple[int, int]:
     """Delete existing criteria and insert the new list.
 
-    A dedup check guards against duplicate rows when the same criterion
-    appears more than once in the extracted list.
+    Guards:
+    - If the incoming list is smaller than the existing count, keeps the
+      existing criteria unchanged and logs a warning (regression guard).
+    - Dedup check skips identical rows that appear more than once in the
+      incoming list.
 
-    Returns (inserted, failed).
+    Returns (inserted, failed). Returns (-1, 0) if replacement was skipped
+    due to the regression guard (caller should use the old count).
     """
+    # Count existing rows before touching anything
+    old_count_row = conn.execute(
+        text('SELECT COUNT(*) FROM eligibility_criteria WHERE scholarship_id = :sid'),
+        {'sid': scholarship_id},
+    ).scalar()
+    old_count = int(old_count_row or 0)
+
+    if old_count > 0 and len(criteria_list) < old_count:
+        logging.warning(
+            '  Regression guard: keeping existing %d criteria for scholarship %d '
+            '(new extraction only produced %d)',
+            old_count, scholarship_id, len(criteria_list),
+        )
+        return -1, 0   # sentinel: caller knows replacement was skipped
+
     conn.execute(
         text('DELETE FROM eligibility_criteria WHERE scholarship_id = :sid'),
         {'sid': scholarship_id},
@@ -1141,11 +1165,13 @@ def do_rescrape(
         if ids:
             stmt = text('''
                 SELECT s.id, s.title, s.application_url,
+                       s.amount, s.benefits_text, s.deadline, s.scholarship_type,
                        COUNT(ec.id) AS criteria_count
                 FROM scholarships s
                 LEFT JOIN eligibility_criteria ec ON ec.scholarship_id = s.id
                 WHERE s.id IN :ids
-                GROUP BY s.id, s.title, s.application_url
+                GROUP BY s.id, s.title, s.application_url,
+                         s.amount, s.benefits_text, s.deadline, s.scholarship_type
                 ORDER BY criteria_count ASC, s.id ASC
             ''').bindparams(bindparam('ids', expanding=True))
             rows = conn.execute(stmt, {'ids': ids}).fetchall()
@@ -1153,11 +1179,13 @@ def do_rescrape(
             having_clause = '' if include_complete else 'HAVING criteria_count < 5'
             rows = conn.execute(text(f'''
                 SELECT s.id, s.title, s.application_url,
+                       s.amount, s.benefits_text, s.deadline, s.scholarship_type,
                        COUNT(ec.id) AS criteria_count
                 FROM scholarships s
                 LEFT JOIN eligibility_criteria ec ON ec.scholarship_id = s.id
                 WHERE s.application_url IS NOT NULL AND s.application_url != ''
-                GROUP BY s.id, s.title, s.application_url
+                GROUP BY s.id, s.title, s.application_url,
+                         s.amount, s.benefits_text, s.deadline, s.scholarship_type
                 {having_clause}
                 ORDER BY criteria_count ASC, s.id ASC
             ''')).fetchall()
@@ -1216,7 +1244,11 @@ def do_rescrape(
             failed += 1
             continue
 
-        # Extract criteria
+        # Extract criteria (and full scholarship data when using Claude)
+        extracted       = {}
+        eligibility_raw = ''
+        new_criteria    = []
+
         if use_claude:
             try:
                 response = call_claude(page_text, row.application_url, prompt_path)
@@ -1240,11 +1272,58 @@ def do_rescrape(
                 failed += 1
                 continue
 
-        # Snapshot before
-        with engine.connect() as snap_conn:
-            before = _scholarship_criteria_snapshot(snap_conn, row.id)
+        # ── Compute quality score BEFORE (using current DB values + new criteria count) ──
+        before_scholarship = {
+            'title':               row.title,
+            'amount':              row.amount,
+            'benefits_text':       row.benefits_text,
+            'deadline':            str(row.deadline) if row.deadline else None,
+            'description':         'placeholder' * 15,   # we don't select it; assume > 100
+            'eligibility_criteria': [{}] * row.criteria_count,
+        }
+        q_before, _ = quality_score(before_scholarship)
 
-        # Write changes
+        # Snapshot before criteria
+        with engine.connect() as snap_conn:
+            before_snap = _scholarship_criteria_snapshot(snap_conn, row.id)
+
+        # ── Determine field updates (only improve, never blank out) ──────────────
+        field_updates: dict = {}
+        field_changes: list[str] = []
+
+        if use_claude and extracted:
+            # scholarship_type: upgrade if current is 'Other' or missing
+            new_type = extracted.get('scholarship_type')
+            if new_type in VALID_SCHOLARSHIP_TYPES and new_type != 'Other' \
+                    and (not row.scholarship_type or row.scholarship_type == 'Other'):
+                field_updates['scholarship_type'] = new_type
+                field_changes.append(
+                    f'scholarship_type: {row.scholarship_type or "None"} → {new_type}')
+
+            # amount: upgrade if current is 0/null and Claude found a real value
+            new_amount = extracted.get('amount')
+            if new_amount and float(new_amount) >= 100 \
+                    and (not row.amount or float(row.amount) == 0):
+                field_updates['amount'] = float(new_amount)
+                field_changes.append(
+                    f'amount: {row.amount or 0} → {new_amount}')
+
+            # benefits_text: fill if missing
+            new_benefits = extracted.get('benefits_text')
+            if new_benefits and not row.benefits_text:
+                field_updates['benefits_text'] = new_benefits
+                field_changes.append(f'benefits_text: (none) → {new_benefits[:60]}')
+
+            # deadline: fill if missing or clearly wrong (year < 2025)
+            new_dl = extracted.get('deadline')
+            if new_dl and is_valid_date(new_dl):
+                current_dl = str(row.deadline) if row.deadline else None
+                current_year = int(current_dl[:4]) if current_dl else 0
+                if not current_dl or current_year < 2025:
+                    field_updates['deadline'] = new_dl
+                    field_changes.append(f'deadline: {current_dl or "None"} → {new_dl}')
+
+        # ── Write changes ────────────────────────────────────────────────────────
         with engine.begin() as conn:
             if eligibility_raw:
                 conn.execute(
@@ -1252,19 +1331,46 @@ def do_rescrape(
                     {'txt': eligibility_raw, 'id': row.id},
                 )
 
+            if field_updates:
+                set_clause = ', '.join(f'{k} = :{k}' for k in field_updates)
+                field_updates['id'] = row.id
+                conn.execute(
+                    text(f'UPDATE scholarships SET {set_clause} WHERE id = :id'),
+                    field_updates,
+                )
+
             if new_criteria:
                 ins, _fail = _replace_criteria(
                     conn, row.id, new_criteria,
                     source_url=row.application_url,
                 )
-                after_count = ins
+                # ins == -1 means regression guard fired; keep old count
+                after_count = before_snap['count'] if ins == -1 else ins
             else:
-                after_count = before['count']
+                after_count = before_snap['count']
 
-        # Report diff
-        delta = after_count - before['count']
+        # ── Quality score AFTER (use updated values) ─────────────────────────────
+        after_scholarship = {
+            'title':               row.title,
+            'amount':              field_updates.get('amount', row.amount),
+            'benefits_text':       field_updates.get('benefits_text', row.benefits_text),
+            'deadline':            field_updates.get('deadline',
+                                       str(row.deadline) if row.deadline else None),
+            'description':         'placeholder' * 15,
+            'eligibility_criteria': [{}] * after_count,
+        }
+        q_after, missing_after = quality_score(after_scholarship)
+
+        # ── Report ────────────────────────────────────────────────────────────────
+        q_flag = ' ⚠' if q_after < 60 else ''
+        print(f'  quality:  {q_before} → {q_after}/100{q_flag}', end='')
+        print(f'  [missing: {", ".join(missing_after)}]' if missing_after else '')
+        delta = after_count - before_snap['count']
         sign  = '+' if delta >= 0 else ''
-        print(f'  criteria: {before["count"]} → {after_count} ({sign}{delta})')
+        print(f'  criteria: {before_snap["count"]} → {after_count} ({sign}{delta})')
+        if field_changes:
+            for fc in field_changes:
+                print(f'  UPDATED   {fc}')
         if new_criteria:
             types_found = sorted({c.get('criteria_type', '?') for c in new_criteria})
             print(f'  types: {", ".join(types_found)}')

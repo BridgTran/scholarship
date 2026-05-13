@@ -12,18 +12,25 @@ ALLOWED_CRITERIA_TYPES = {
     'other'
 }
 
+# Keys allowed under every criteria type (catch-all / fallback keys).
+_UNIVERSAL_KEYS = {'raw_text', 'manual_review_note'}
+
 ALLOWED_KEYS: dict = {
-    'academic_level':  {'degree_level', 'year_of_study', 'study_load', 'enrollment_status', 'prior_education', 'level', 'study_mode'},
+    'academic_level':  {'degree_level', 'year_of_study', 'study_load', 'enrollment_status',
+                        'prior_education', 'level', 'study_mode'},
     'gpa':             {'minimum_gpa', 'academic_standing'},
     'field_of_study':  {'discipline', 'major'},
-    'demographic':     {'citizenship', 'residency_status', 'nationality', 'origin_region', 'gender', 'age', 'background', 'indigenous_status'},
+    'demographic':     {'citizenship', 'residency_status', 'nationality', 'origin_region',
+                        'gender', 'age', 'background', 'indigenous_status',
+                        # Cross-type keys Claude sometimes sends under demographic:
+                        'employment_status', 'home_state', 'study_country'},
     'location':        {'study_state', 'study_country', 'home_state'},
     'financial_need':  {'income_threshold', 'means_tested'},
     'extracurricular': {'community_involvement', 'leadership', 'sport'},
     'other':           {'visa_status', 'disability', 'employment_status', 'institution',
-                        'study_load', 'fee_status', 'raw_text',
+                        'study_load', 'fee_status', 'enrollment_status',
                         'ineligible_condition_excluded', 'ineligible_program_excluded',
-                        'manual_review_note', 'prior_education', 'gaokao_completion_timeframe'},
+                        'prior_education', 'gaokao_completion_timeframe'},
 }
 
 YEAR_OF_STUDY_VALUE_MAP: dict = {
@@ -36,27 +43,44 @@ YEAR_OF_STUDY_VALUE_MAP: dict = {
 }
 
 KEY_ALIASES: dict = {
-    'study_level':       'degree_level',
-    'academic_year':     'year_of_study',
-    'year':              'year_of_study',
-    'enrollment':        'enrollment_status',
-    'enrolment_status':  'enrollment_status',
-    'gpa_minimum':       'minimum_gpa',
-    'minimum_grade':     'minimum_gpa',
-    'field':             'discipline',
-    'course':            'discipline',
-    'area_of_study':     'discipline',
-    'residency':         'residency_status',
-    'citizen':           'citizenship',
-    'region':            'origin_region',
-    'home_country':      'nationality',
-    'state':             'study_state',
-    'country':           'study_country',
-    'income':            'income_threshold',
-    'financial_status':  'means_tested',
-    'community':         'community_involvement',
-    'visa':              'visa_status',
-    'indigenous':        'indigenous_status',
+    # Academic level
+    'study_level':           'degree_level',
+    'academic_year':         'year_of_study',
+    'year':                  'year_of_study',
+    'enrollment':            'enrollment_status',
+    'enrolment_status':      'enrollment_status',
+    'career_stage':          'enrollment_status',    # e.g. "First three years of teaching"
+    'new_student_status':    'enrollment_status',    # e.g. "New commencing student"
+    'current_student_status':'enrollment_status',    # e.g. "Not a current student"
+    # GPA
+    'gpa_minimum':           'minimum_gpa',
+    'minimum_grade':         'minimum_gpa',
+    # Field of study
+    'field':                 'discipline',
+    'course':                'discipline',
+    'area_of_study':         'discipline',
+    # Demographic
+    'residency':             'residency_status',
+    'citizen':               'citizenship',
+    'region':                'origin_region',
+    'home_country':          'nationality',
+    'eligible_country':      'study_country',        # → location key allowed in demographic
+    'employment':            'employment_status',     # e.g. "Public school teacher"
+    'professional_membership': 'manual_review_note', # e.g. "NSWNMA member required"
+    'membership_requirement':  'manual_review_note', # e.g. "Federation Student Member"
+    # Location
+    'state':                 'study_state',
+    'country':               'study_country',
+    'regional_rural_remote': 'home_state',           # e.g. "Must live in regional area"
+    # Financial
+    'income':                'income_threshold',
+    'financial_status':      'means_tested',
+    'financial_need':        'means_tested',         # key used under financial_need type
+    # Extracurricular
+    'community':             'community_involvement',
+    # Other
+    'visa':                  'visa_status',
+    'indigenous':            'indigenous_status',
 }
 
 CRITERIA_TYPE_ALIASES = {
@@ -138,11 +162,14 @@ def normalize_criteria_value(criteria_type, criteria_key, value):
 def validate_criteria_key(criteria_type, criteria_key):
     if not isinstance(criteria_key, str):
         return False
+    # Universal keys are valid under any criteria type.
+    if criteria_key in _UNIVERSAL_KEYS:
+        return True
     allowed = ALLOWED_KEYS.get(criteria_type)
     if allowed is None:
         return False
-    # Direct match first — catches keys like 'ineligible_condition_excluded' that
-    # are already stored with the suffix in the allowlist.
+    # Direct match — catches keys like 'ineligible_condition_excluded' that are
+    # stored with the suffix already in the allowlist.
     if criteria_key in allowed:
         return True
     # Dynamic exclusion suffix — e.g. 'study_mode_excluded' → check 'study_mode'
