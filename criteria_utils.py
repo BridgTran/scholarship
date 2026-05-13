@@ -24,7 +24,7 @@ ALLOWED_KEYS: dict = {
                         'gender', 'age', 'background', 'indigenous_status',
                         # Cross-type keys Claude sometimes sends under demographic:
                         'employment_status', 'home_state', 'study_country'},
-    'location':        {'study_state', 'study_country', 'home_state'},
+    'location':        {'study_state', 'study_country', 'home_state', 'citizenship', 'residency_status'},
     'financial_need':  {'income_threshold', 'means_tested'},
     'extracurricular': {'community_involvement', 'leadership', 'sport'},
     'other':           {'visa_status', 'disability', 'employment_status', 'institution',

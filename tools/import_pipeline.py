@@ -398,9 +398,32 @@ def extract_json(content: str) -> dict:
         return json.loads(content)
     except json.JSONDecodeError:
         pass
+    # Try fenced code block (complete response)
     fenced = re.search(r'```(?:json)?\s*(\{.*\})\s*```', content, re.DOTALL)
     if fenced:
         return json.loads(fenced.group(1))
+    # Partial-response recovery: response was truncated mid-JSON.
+    # Extract the raw JSON block, close any open array/object, and parse what we have.
+    raw_match = re.search(r'```(?:json)?\s*(\{.*)', content, re.DOTALL)
+    if raw_match:
+        fragment = raw_match.group(1).rstrip()
+        # Remove trailing incomplete object that ends with a comma or partial key
+        fragment = re.sub(r',\s*\{[^}]*$', '', fragment)  # drop last incomplete {}
+        fragment = re.sub(r',\s*"[^"]*"?\s*:?[^,\]]*$', '', fragment)  # drop trailing partial kv
+        # Close open array and object
+        opens = fragment.count('{') - fragment.count('}')
+        arr_opens = fragment.count('[') - fragment.count(']')
+        fragment += '}' * max(0, opens) + ']' * max(0, arr_opens)
+        # Re-close the root object if needed
+        if arr_opens > 0:
+            fragment += '}'
+        try:
+            parsed = json.loads(fragment)
+            logging.warning('Recovered partial JSON response (%d chars trimmed)',
+                            len(content) - len(fragment))
+            return parsed
+        except json.JSONDecodeError:
+            pass
     raise ValueError('Response did not contain valid JSON.')
 
 
@@ -429,7 +452,7 @@ def call_claude(page_text: str, url: str, prompt_path: str) -> dict:
     client  = anthropic.Anthropic(api_key=api_key)
     message = client.messages.create(
         model=model,
-        max_tokens=2000,
+        max_tokens=8192,
         messages=[{'role': 'user', 'content': full_prompt}],
     )
     return extract_json(message.content[0].text)

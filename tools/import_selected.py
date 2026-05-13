@@ -163,6 +163,43 @@ _LEGACY_TARGETS = [
             'append_description': FREEMASONS_NOTE,
         },
     },
+    # -----------------------------------------------------------------------
+    # UNSW scholarships — imported 2026-05-13 (IDs 308–337)
+    # -----------------------------------------------------------------------
+    # URL 1961 — 15 equity scholarships (draft, deadline 2027-04-24)
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Harris Family', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'UNSW Access', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'President', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Bertha McKenzie', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'UNSW Equity Award', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Pre-Entry', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Community Plus', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Accommodation', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Basser Endowed', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Basser Equity', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Engineering Indigenous', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Tyree Women', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Al Willis', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'Moses Honours', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1961', 'title_contains': 'John Ragnar', 'overrides': {'status': 'draft', 'deadline': '2027-04-24', 'org_name': 'UNSW Sydney'}},
+    # URL 1901 — 4 active scholarships (deadline 2026-12-31)
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1901', 'title_contains': 'Theresa Lindsay', 'overrides': {'status': 'active', 'deadline': '2026-12-31', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1901', 'title_contains': 'Kamal Bamadhaj', 'overrides': {'status': 'active', 'deadline': '2026-12-31', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1901', 'title_contains': 'Origin', 'overrides': {'status': 'active', 'deadline': '2026-12-31', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1901', 'title_contains': 'Dorothy Hughes', 'overrides': {'status': 'active', 'deadline': '2026-12-31', 'org_name': 'UNSW Sydney'}},
+    # URL 1878 — 5 draft scholarships (deadline 2026-12-09)
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1878', 'title_contains': 'Peter Ware', 'overrides': {'status': 'draft', 'deadline': '2026-12-09', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1878', 'title_contains': 'Burman', 'overrides': {'status': 'draft', 'deadline': '2026-12-09', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1878', 'title_contains': 'Sir Arthur', 'overrides': {'status': 'draft', 'deadline': '2026-12-09', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1878', 'title_contains': 'Monica and Gary', 'overrides': {'status': 'draft', 'deadline': '2026-12-09', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1878', 'title_contains': 'Veterans', 'overrides': {'status': 'draft', 'deadline': '2026-12-09', 'org_name': 'UNSW Sydney'}},
+    # Individual pages (draft, various deadlines)
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1891', 'title_contains': 'General Merit', 'overrides': {'status': 'draft', 'deadline': '2026-09-01', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1879', 'title_contains': 'Women in Engineering', 'overrides': {'status': 'draft', 'deadline': '2026-09-01', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1882', 'title_contains': 'Arts', 'overrides': {'status': 'draft', 'deadline': '2026-09-01', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1886', 'title_contains': 'Mathematics', 'overrides': {'status': 'draft', 'deadline': '2026-09-01', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1490', 'title_contains': 'Cannon-Brookes', 'overrides': {'status': 'draft', 'deadline': '2026-09-01', 'org_name': 'UNSW Sydney'}},
+    {'url': 'https://www.scholarships.unsw.edu.au/scholarships/id/1897', 'title_contains': 'Asylum', 'overrides': {'status': 'draft', 'deadline': '2026-10-30', 'org_name': 'UNSW Sydney'}},
 ]  # end _LEGACY_TARGETS
 
 # ---------------------------------------------------------------------------
@@ -229,7 +266,9 @@ for target in TARGETS:
     if 'append_description' in overrides:
         s['description'] = (s.get('description') or '') + overrides['append_description']
 
-    if 'org_name' in overrides and s.get('organization'):
+    if 'org_name' in overrides:
+        if not s.get('organization'):
+            s['organization'] = {}
         s['organization']['name'] = overrides['org_name']
 
     if 'industry' in overrides:
