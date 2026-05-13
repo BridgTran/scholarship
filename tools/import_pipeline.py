@@ -207,12 +207,79 @@ DISCOVERY_QUERIES = [
 
 # Heuristic extraction patterns
 _AMOUNT_RE   = re.compile(r'\$\s*([\d,]+(?:\.\d{2})?)', re.IGNORECASE)
+_PERCENT_RE  = re.compile(
+    r'(\d{1,3}(?:\.\d+)?)\s*%\s*(?:of\s+)?(?:tuition|fees?|course\s+costs?)',
+    re.IGNORECASE,
+)
+_WAIVER_RE   = re.compile(
+    r'\b(?:full\s+(?:tuition|fees?)|tuition\s+waiver|covers?\s+(?:full\s+)?(?:tuition|fees?)'
+    r'|fee\s+waiver|full\s+scholarship|stipend|living\s+allowance)\b',
+    re.IGNORECASE,
+)
 _DEADLINE_RE = re.compile(
-    r'(?:deadline|closes?|due|applications?\s+(?:close|due))[:\s]+'
-    r'(\d{1,2}\s+\w+\s+\d{4}|\d{4}-\d{2}-\d{2}|\w+\s+\d{1,2},?\s+\d{4})',
+    r'(?:deadline|closes?\s*(?:on|by)?|due|closing\s+date|applications?\s+(?:close[sd]?|due))'
+    r'[:\s]+'
+    r'(\d{1,2}[/\-]\d{1,2}[/\-]\d{4}'          # DD/MM/YYYY or DD-MM-YYYY
+    r'|\d{1,2}\s+\w+\s+\d{4}'                   # DD Month YYYY
+    r'|\d{4}-\d{2}-\d{2}'                        # YYYY-MM-DD
+    r'|\w+\s+\d{1,2},?\s+\d{4}'                 # Month DD, YYYY
+    r'|\w+\s+\d{4})',                            # Month YYYY
+    re.IGNORECASE,
+)
+_ROLLING_RE  = re.compile(
+    r'\b(?:open\s+intake|rolling\s+(?:applications?|admissions?|basis)'
+    r'|no\s+(?:fixed\s+)?deadline|year.round\s+(?:applications?|intake)'
+    r'|applications?\s+(?:accepted\s+)?year.round)\b',
     re.IGNORECASE,
 )
 _ISO_DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+
+# Scholarship type keyword sets
+_MERIT_KEYWORDS = re.compile(
+    r'\b(?:academic\s+merit|academic\s+achiev\w+|academic\s+excell\w+'
+    r'|academic\s+performance|GPA|grade\s+point|high\s+achiev\w+'
+    r'|top\s+student|academic\s+record|academic\s+result)\b',
+    re.IGNORECASE,
+)
+_NEED_KEYWORDS = re.compile(
+    r'\b(?:financial\s+need|financial\s+hardship|financial\s+assist\w+'
+    r'|financial\s+support|equity|low[\s\-]income|disadvantaged'
+    r'|means[\s\-]tested|welfare|economic\s+hardship|bursary'
+    r'|demonstrated\s+need|socio[\s\-]economic)\b',
+    re.IGNORECASE,
+)
+
+VALID_SCHOLARSHIP_TYPES = {'Merit-Based', 'Need-Based', 'Merit-And-Need', 'Other'}
+
+_MONTH_MAP = {
+    'january': '01', 'february': '02', 'march': '03', 'april': '04',
+    'may': '05', 'june': '06', 'july': '07', 'august': '08',
+    'september': '09', 'october': '10', 'november': '11', 'december': '12',
+    'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
+    'jun': '06', 'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10',
+    'nov': '11', 'dec': '12',
+}
+_MONTH_LAST_DAY = {
+    '01': '31', '02': '28', '03': '31', '04': '30', '05': '31', '06': '30',
+    '07': '31', '08': '31', '09': '30', '10': '31', '11': '30', '12': '31',
+}
+
+
+def _infer_scholarship_type(text: str) -> str:
+    """Infer scholarship_type from text using keyword matching.
+
+    Returns 'Merit-Based', 'Need-Based', 'Merit-And-Need', or 'Other'.
+    Requires at least 2 keyword hits to avoid false positives on single mentions.
+    """
+    merit_hits = len(_MERIT_KEYWORDS.findall(text))
+    need_hits  = len(_NEED_KEYWORDS.findall(text))
+    if merit_hits >= 1 and need_hits >= 1:
+        return 'Merit-And-Need'
+    if merit_hits >= 1:
+        return 'Merit-Based'
+    if need_hits >= 1:
+        return 'Need-Based'
+    return 'Other'
 
 
 # ── HTTP Fetching ─────────────────────────────────────────────────────────────
@@ -376,11 +443,24 @@ def _parse_date(raw: str) -> str | None:
     if _ISO_DATE_RE.match(raw):
         return raw
     from datetime import datetime as dt
-    for fmt in ('%d %B %Y', '%d %b %Y', '%B %d, %Y', '%B %d %Y', '%b %d %Y'):
+    # Standard named-month formats
+    for fmt in ('%d %B %Y', '%d %b %Y', '%B %d, %Y', '%B %d %Y', '%b %d %Y',
+                '%d/%m/%Y', '%d-%m-%Y'):
         try:
             return dt.strptime(raw, fmt).strftime('%Y-%m-%d')
         except ValueError:
             continue
+    # Month YYYY only → last day of that month
+    m = re.match(r'^([A-Za-z]+)\s+(\d{4})$', raw)
+    if m:
+        mon = _MONTH_MAP.get(m.group(1).lower())
+        if mon:
+            return f'{m.group(2)}-{mon}-{_MONTH_LAST_DAY[mon]}'
+    # YYYY-MM only
+    m = re.match(r'^(\d{4})-(\d{2})$', raw)
+    if m:
+        mon = m.group(2)
+        return f'{m.group(1)}-{mon}-{_MONTH_LAST_DAY.get(mon, "30")}'
     return None
 
 
@@ -414,20 +494,40 @@ def extract_scholarship_bs4(html_bytes: bytes, url: str) -> dict:
 
     full_text = soup.get_text()
 
-    # Dollar amount
+    # Dollar amount — reject sentinel values < $100
     m = _AMOUNT_RE.search(full_text)
     if m:
         try:
-            data['amount'] = float(m.group(1).replace(',', ''))
+            amt = float(m.group(1).replace(',', ''))
+            if amt >= 100:
+                data['amount'] = amt
+            else:
+                logging.debug('  Ignoring suspiciously small amount $%.0f', amt)
         except ValueError:
             pass
 
-    # Deadline
-    m = _DEADLINE_RE.search(full_text)
-    if m:
-        parsed = _parse_date(m.group(1))
-        if parsed:
-            data['deadline'] = parsed
+    # If no clean dollar amount, check for percentage or waiver language
+    if not data.get('amount'):
+        mp = _PERCENT_RE.search(full_text)
+        if mp:
+            data['benefits_text'] = f'{mp.group(1)}% tuition reduction'
+        elif _WAIVER_RE.search(full_text):
+            mw = _WAIVER_RE.search(full_text)
+            data['benefits_text'] = mw.group(0).strip().title()
+
+    # Deadline — check for rolling/open-intake first
+    if _ROLLING_RE.search(full_text):
+        logging.debug('  Rolling intake detected — deadline set to None')
+        # Leave deadline absent; sanitize will flag for review
+    else:
+        m = _DEADLINE_RE.search(full_text)
+        if m:
+            parsed = _parse_date(m.group(1))
+            if parsed:
+                data['deadline'] = parsed
+
+    # Scholarship type inferred from page text
+    data['scholarship_type'] = _infer_scholarship_type(full_text)
 
     # Organisation inferred from domain
     hostname = urlparse(url).hostname or ''
@@ -466,6 +566,50 @@ def confidence_score(data: dict) -> float:
     if isinstance(data.get('organization'), dict) and data['organization'].get('name'):
         score += 0.10
     return score
+
+
+def quality_score(scholarship: dict) -> tuple[int, list[str]]:
+    """Score a fully-extracted scholarship 0–100.
+
+    Each component is worth 20 points:
+      title        — present and > 10 chars
+      amount       — amount > 0 OR benefits_text present (tuition waiver counts)
+      deadline     — present and valid YYYY-MM-DD
+      description  — present and > 100 chars
+      criteria     — 3 or more eligibility criteria
+
+    Returns (score: int, missing: list[str]) where missing lists failed components.
+    """
+    score   = 0
+    missing = []
+
+    if scholarship.get('title') and len(scholarship['title']) > 10:
+        score += 20
+    else:
+        missing.append('title')
+
+    if (scholarship.get('amount') and float(scholarship['amount']) > 0) \
+            or scholarship.get('benefits_text'):
+        score += 20
+    else:
+        missing.append('amount/benefits_text')
+
+    if is_valid_date(scholarship.get('deadline')):
+        score += 20
+    else:
+        missing.append('deadline')
+
+    if scholarship.get('description') and len(scholarship['description']) > 100:
+        score += 20
+    else:
+        missing.append('description')
+
+    if len(scholarship.get('eligibility_criteria') or []) >= 3:
+        score += 20
+    else:
+        missing.append('criteria (<3)')
+
+    return score, missing
 
 
 # ── DB helpers ───────────────────────────────────────────────────────────────
@@ -656,6 +800,37 @@ def _insert_scholarships_from_list(conn, scholarships: list) -> tuple[int, int, 
     """Shared insertion loop. Returns (inserted, skipped_dupes, skipped_invalid)."""
     inserted, skipped, skipped_invalid = 0, 0, 0
     for scholarship in scholarships:
+        # ── Normalise scholarship_type (applies to all imports, not just manual) ──
+        st = scholarship.get('scholarship_type')
+        if st not in VALID_SCHOLARSHIP_TYPES:
+            if str(st or '').lower() == 'equity':
+                remapped = 'Need-Based'
+            elif st in (None, '', 'Other') or st not in VALID_SCHOLARSHIP_TYPES:
+                # Try to infer from description + eligibility text
+                infer_src = ' '.join(filter(None, [
+                    scholarship.get('description', ''),
+                    scholarship.get('eligibility_raw_text', ''),
+                    ' '.join(str(c.get('required_value', ''))
+                             for c in (scholarship.get('eligibility_criteria') or [])),
+                ]))
+                remapped = _infer_scholarship_type(infer_src) if infer_src.strip() else 'Other'
+            else:
+                remapped = 'Other'
+            if remapped != st:
+                logging.info('  scholarship_type "%s" → "%s" for: %s',
+                             st, remapped, scholarship.get('title'))
+            scholarship['scholarship_type'] = remapped
+
+        # ── Quality score gate ───────────────────────────────────────────────────
+        score, missing = quality_score(scholarship)
+        if score < 60:
+            old_status = scholarship.get('status', 'active')
+            scholarship['status'] = 'draft'
+            logging.warning(
+                'Quality score %d/100 — forcing draft (was: %s) for: %s  [missing: %s]',
+                score, old_status, scholarship.get('title'), ', '.join(missing),
+            )
+
         if not validate_scholarship(scholarship):
             logging.warning('Skipping invalid scholarship: %s', scholarship.get('title'))
             skipped_invalid += 1
@@ -842,9 +1017,30 @@ def _scholarship_criteria_snapshot(conn, scholarship_id: int) -> dict:
     }
 
 
+def _criteria_exists(conn, scholarship_id: int, criteria_type: str,
+                     criteria_key: str, required_value: str) -> bool:
+    """Return True if an identical criterion row already exists."""
+    row = conn.execute(
+        text('''
+            SELECT 1 FROM eligibility_criteria
+            WHERE scholarship_id  = :sid
+              AND criteria_type   = :ctype
+              AND criteria_key    = :ckey
+              AND required_value  = :val
+            LIMIT 1
+        '''),
+        {'sid': scholarship_id, 'ctype': criteria_type,
+         'ckey': criteria_key,  'val': required_value},
+    ).first()
+    return row is not None
+
+
 def _replace_criteria(conn, scholarship_id: int, criteria_list: list,
                       source_url: str = None) -> tuple[int, int]:
     """Delete existing criteria and insert the new list.
+
+    A dedup check guards against duplicate rows when the same criterion
+    appears more than once in the extracted list.
 
     Returns (inserted, failed).
     """
@@ -853,8 +1049,26 @@ def _replace_criteria(conn, scholarship_id: int, criteria_list: list,
         {'sid': scholarship_id},
     )
     inserted, failed = 0, 0
+    seen: set[tuple] = set()
     for c in expand_compound_criteria(criteria_list):
         try:
+            # Normalise key/type/value to build the dedup key
+            from criteria_utils import (normalize_criteria_type,
+                                        normalize_criteria_key,
+                                        normalize_criteria_value)
+            ctype = normalize_criteria_type(c.get('criteria_type'),
+                                            scholarship_id=scholarship_id,
+                                            source_url=source_url, criteria=c)
+            ckey  = normalize_criteria_key(c.get('criteria_key')) or \
+                    normalize_criteria_key(ctype)
+            cval  = normalize_criteria_value(
+                        ctype, ckey,
+                        str(c.get('required_value', '')).strip())
+            dedup_key = (ctype, ckey, cval)
+            if dedup_key in seen:
+                logging.debug('  Skipping duplicate criterion %s', dedup_key)
+                continue
+            seen.add(dedup_key)
             insert_criteria(conn, scholarship_id, c, source_url=source_url)
             inserted += 1
         except Exception:

@@ -22,8 +22,8 @@ ALLOWED_KEYS: dict = {
     'extracurricular': {'community_involvement', 'leadership', 'sport'},
     'other':           {'visa_status', 'disability', 'employment_status', 'institution',
                         'study_load', 'fee_status', 'raw_text',
-                        'ineligible_condition_excluded', 'manual_review_note',
-                        'prior_education', 'gaokao_completion_timeframe'},
+                        'ineligible_condition_excluded', 'ineligible_program_excluded',
+                        'manual_review_note', 'prior_education', 'gaokao_completion_timeframe'},
 }
 
 YEAR_OF_STUDY_VALUE_MAP: dict = {
@@ -141,7 +141,12 @@ def validate_criteria_key(criteria_type, criteria_key):
     allowed = ALLOWED_KEYS.get(criteria_type)
     if allowed is None:
         return False
+    # Direct match first — catches keys like 'ineligible_condition_excluded' that
+    # are already stored with the suffix in the allowlist.
+    if criteria_key in allowed:
+        return True
+    # Dynamic exclusion suffix — e.g. 'study_mode_excluded' → check 'study_mode'
     if criteria_key.endswith('_excluded') or criteria_key.endswith('_exclusion'):
         base = re.sub(r'_(excluded|exclusion)$', '', criteria_key)
         return base in allowed
-    return criteria_key in allowed
+    return False

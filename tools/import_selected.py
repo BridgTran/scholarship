@@ -14,13 +14,10 @@ from db import engine
 from tools.import_pipeline import (
     fetch_url, extract_scholarship_bs4, confidence_score,
     extract_main_text, call_claude, CONFIDENCE_THRESHOLD,
-    _insert_scholarships_from_list,
+    _insert_scholarships_from_list, quality_score,
 )
 
 PROMPT_PATH = 'perplexity_prompt.txt'
-
-# Valid DB ENUMs
-VALID_SCHOLARSHIP_TYPES = {'Merit-Based', 'Need-Based', 'Merit-And-Need', 'Other'}
 
 # Map common month names to last-day of month for deadline fallback
 _MONTH_MAP = {
@@ -67,14 +64,21 @@ def _parse_deadline(raw) -> str | None:
 
 
 def sanitize_scholarship(s: dict) -> dict:
-    """Fix common extraction issues before validation / insertion."""
-    # scholarship_type: remap invalid values; 'Equity' → 'Need-Based', others → 'Other'
-    st = s.get('scholarship_type')
-    if st not in VALID_SCHOLARSHIP_TYPES:
-        remapped = 'Need-Based' if str(st or '').lower() == 'equity' else 'Other'
-        if st:
-            logging.info('  Remapping scholarship_type "%s" → "%s"', st, remapped)
-        s['scholarship_type'] = remapped
+    """Fix common extraction issues before validation / insertion.
+
+    scholarship_type remapping and quality scoring are handled downstream
+    by _insert_scholarships_from_list() in import_pipeline.py.
+    """
+    # amount: reject sentinel values < $100
+    amt = s.get('amount')
+    if amt is not None:
+        try:
+            amt_f = float(amt)
+            if 0 < amt_f < 100:
+                logging.info('  Ignoring suspiciously small amount $%.0f — zeroing out', amt_f)
+                s['amount'] = 0
+        except (TypeError, ValueError):
+            pass
 
     # deadline: coerce to YYYY-MM-DD; fallback to end-of-year if unparseable
     raw_deadline = s.get('deadline')
@@ -251,7 +255,12 @@ for target in TARGETS:
 print(f'\n{"="*60}')
 print(f'Prepared {len(selected)} scholarships for import:')
 for s in selected:
-    print(f'  [{s["status"]:6}] {s.get("title")}  —  ${s.get("amount") or "?"}')
+    score, missing = quality_score(s)
+    flag = ' ⚠ LOW QUALITY' if score < 60 else ''
+    missing_str = f'  missing: {", ".join(missing)}' if missing else ''
+    print(f'  [{s["status"]:6}] Q={score:3}/100{flag}  {s.get("title")}  —  ${s.get("amount") or s.get("benefits_text") or "?"}')
+    if missing:
+        print(f'           {missing_str}')
 
 print(f'\nInserting into database...')
 
