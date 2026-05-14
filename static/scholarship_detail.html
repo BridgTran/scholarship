@@ -462,6 +462,10 @@
               SECOND_YEAR:  '2nd Year',
               THIRD_YEAR:   '3rd Year',
               FOURTH_YEAR:  '4th Year',
+              '1ST_YEAR':   '1st Year',
+              '2ND_YEAR':   '2nd Year',
+              '3RD_YEAR':   '3rd Year',
+              '4TH_YEAR':   '4th Year',
             };
             if (mapping[value]) return mapping[value];
             if (/^\d+$/.test(value)) return `Year ${value}`;
@@ -509,8 +513,10 @@
           }
           if (baseKey === 'citizenship') {
             const mapping = {
-              AU: 'Australian citizen',
-              NZ: 'New Zealand citizen',
+              AU:             'Australian citizen',
+              NZ:             'New Zealand citizen',
+              CITIZEN_OR_PR:  'Citizen or Permanent Resident',
+              INTERNATIONAL:  'International Student',
             };
             return mapping[value] || value;
           }
@@ -528,6 +534,57 @@
               SOUTH_ASIA:     'South Asia',
               CENTRAL_ASIA:   'Central Asia',
               OCEANIA:        'Oceania',
+            };
+            return mapping[value] || value;
+          }
+
+          // ── Field of study ────────────────────────────────────────────────
+          if (criteriaType === 'field_of_study' && ['discipline', 'major'].includes(baseKey)) {
+            const mapping = {
+              SOCIAL_WORK:                              'Social Work',
+              HISTORY_POLITICS_DEVELOPMENTAL_STUDIES:   'History, Politics & Development Studies',
+              LAW:                                      'Law',
+              MEDICINE:                                 'Medicine',
+              NURSING:                                  'Nursing',
+              ENGINEERING:                              'Engineering',
+              SCIENCE:                                  'Science',
+              ARTS:                                     'Arts',
+              BUSINESS:                                 'Business',
+              EDUCATION:                                'Education',
+              IT:                                       'Information Technology',
+              HEALTH:                                   'Health Sciences',
+            };
+            return mapping[value] || value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          }
+
+          // ── Demographic ───────────────────────────────────────────────────
+          if (baseKey === 'indigenous_status') {
+            const mapping = {
+              INDIGENOUS_AUSTRALIAN: 'Indigenous Australian',
+              Indigenous:            'Indigenous Australian',
+              ATSI:                  'Aboriginal or Torres Strait Islander',
+            };
+            return mapping[value] || value;
+          }
+          if (baseKey === 'gender') {
+            const mapping = {
+              female: 'Female',
+              male:   'Male',
+              FEMALE: 'Female',
+              MALE:   'Male',
+            };
+            return mapping[value] || value;
+          }
+
+          // ── Financial need ────────────────────────────────────────────────
+          if (criteriaType === 'financial_need' && baseKey === 'means_tested') {
+            const mapping = {
+              true:                    'Means tested',
+              TRUE:                    'Means tested',
+              EXPERIENCING_DISADVANTAGE: 'Experiencing Disadvantage',
+              FINANCIALLY_DISADVANTAGED: 'Financially Disadvantaged',
+              LOW_SES:                 'Low Socioeconomic Status',
+              LOW_SES_BACKGROUND:      'Low Socioeconomic Background',
             };
             return mapping[value] || value;
           }
