@@ -264,6 +264,18 @@ _MONTH_LAST_DAY = {
     '07': '31', '08': '31', '09': '30', '10': '31', '11': '30', '12': '31',
 }
 
+# URL patterns for detail-link extraction
+_SCHOL_PATH_WORD = re.compile(
+    r'\b(?:scholarship|award|bursary|grant|fellowship|prize|endow|fund)\b',
+    re.IGNORECASE,
+)
+_SKIP_DETAIL_PATH = re.compile(
+    r'\b(?:search|find|browse|filter|list|index|categor|tag|about|contact'
+    r'|faq|news|event|login|apply|eligib|form|help|support|privacy|terms?'
+    r'|cookie|sitemap|overview|home)\b',
+    re.IGNORECASE,
+)
+
 
 def _infer_scholarship_type(text: str) -> str:
     """Infer scholarship_type from text using keyword matching.
@@ -357,6 +369,52 @@ def extract_main_text(html_bytes: bytes) -> str:
     return '\n'.join(lines)
 
 
+def extract_detail_links(html_bytes: bytes, base_url: str, max_links: int = 20) -> list[str]:
+    """Return same-domain links that look like individual scholarship detail pages.
+
+    Heuristic: the link must be deeper than base_url (more path segments), contain
+    a scholarship-related keyword in the path, and not point to a search/nav page.
+    Returns an empty list when BS4 is unavailable or no qualifying links are found.
+    """
+    if not HAS_BS4:
+        return []
+    parsed_base = urlparse(base_url)
+    base_netloc = parsed_base.netloc
+    base_depth  = len([s for s in parsed_base.path.split('/') if s])
+    soup  = BeautifulSoup(html_bytes, 'lxml')
+    seen  = {base_url.rstrip('/'), base_url}
+    links: list[str] = []
+    for a in soup.find_all('a', href=True):
+        raw = a['href'].strip()
+        if not raw or raw.startswith(('#', 'mailto:', 'tel:')):
+            continue
+        if raw.startswith('//'):
+            raw = parsed_base.scheme + ':' + raw
+        elif raw.startswith('/'):
+            raw = f'{parsed_base.scheme}://{base_netloc}{raw}'
+        elif not raw.startswith('http'):
+            continue
+        p     = urlparse(raw)
+        clean = f'{p.scheme}://{p.netloc}{p.path}'.rstrip('/')
+        if p.netloc != base_netloc:
+            continue                              # different domain
+        if clean in seen:
+            continue
+        seen.add(clean)
+        path       = p.path
+        link_depth = len([s for s in path.split('/') if s])
+        if link_depth <= base_depth:
+            continue                              # not deeper than listing page
+        if not _SCHOL_PATH_WORD.search(path):
+            continue                              # no scholarship keyword in path
+        if _SKIP_DETAIL_PATH.search(path):
+            continue                              # navigation / search page
+        links.append(clean)
+        if len(links) >= max_links:
+            break
+    return links
+
+
 # ── Serper API ────────────────────────────────────────────────────────────────
 
 def search_serper(query: str, num_results: int = 10) -> list[str]:
@@ -403,20 +461,33 @@ def extract_json(content: str) -> dict:
     if fenced:
         return json.loads(fenced.group(1))
     # Partial-response recovery: response was truncated mid-JSON.
-    # Extract the raw JSON block, close any open array/object, and parse what we have.
     raw_match = re.search(r'```(?:json)?\s*(\{.*)', content, re.DOTALL)
     if raw_match:
         fragment = raw_match.group(1).rstrip()
-        # Remove trailing incomplete object that ends with a comma or partial key
-        fragment = re.sub(r',\s*\{[^}]*$', '', fragment)  # drop last incomplete {}
-        fragment = re.sub(r',\s*"[^"]*"?\s*:?[^,\]]*$', '', fragment)  # drop trailing partial kv
-        # Close open array and object
-        opens = fragment.count('{') - fragment.count('}')
+
+        # Primary: for {"scholarships": [...]} responses, find the last fully-closed
+        # scholarship entry (ends with '},') and truncate there — cleanest recovery.
+        schol_prefix = re.search(r'\{[^[]*"scholarships"\s*:\s*\[', fragment, re.DOTALL)
+        if schol_prefix:
+            last_close = fragment.rfind('},')
+            if last_close > schol_prefix.end():
+                candidate = fragment[:last_close + 1] + ']}'
+                try:
+                    parsed = json.loads(candidate)
+                    logging.warning('Recovered partial JSON (scholarships array truncated, '
+                                    'kept %d of %d chars)', last_close, len(content))
+                    return parsed
+                except json.JSONDecodeError:
+                    pass
+
+        # Fallback: strip trailing incomplete key-value or object, then close brackets
+        # using innermost-first ordering: close nested objects, then arrays, then root.
+        fragment = re.sub(r',\s*\{[^}]*$', '', fragment)       # drop last partial {}
+        fragment = re.sub(r',\s*"[^"]*"?\s*:?[^,\]]*$', '', fragment)  # drop partial kv
+        opens     = fragment.count('{') - fragment.count('}')
         arr_opens = fragment.count('[') - fragment.count(']')
-        fragment += '}' * max(0, opens) + ']' * max(0, arr_opens)
-        # Re-close the root object if needed
-        if arr_opens > 0:
-            fragment += '}'
+        # Correct closing order: inner objects → arrays+enclosing objects → root
+        fragment += '}' * max(0, opens - arr_opens) + ']}' * max(0, arr_opens)
         try:
             parsed = json.loads(fragment)
             logging.warning('Recovered partial JSON response (%d chars trimmed)',
@@ -446,7 +517,7 @@ def call_claude(page_text: str, url: str, prompt_path: str) -> dict:
         f"Source URL: {url}\n\n"
         "Extract scholarship data from the page content below. "
         "Return a JSON object with a 'scholarships' array (may contain 1 or more entries).\n\n"
-        f"Page content:\n{page_text[:6000]}"
+        f"Page content:\n{page_text[:12000]}"
     )
 
     client  = anthropic.Anthropic(api_key=api_key)
@@ -633,6 +704,41 @@ def quality_score(scholarship: dict) -> tuple[int, list[str]]:
         missing.append('criteria (<3)')
 
     return score, missing
+
+
+def _title_similarity(a: str, b: str) -> float:
+    """Return 0–1 similarity ratio between two scholarship title strings."""
+    return SequenceMatcher(None, a.lower().strip(), b.lower().strip()).ratio()
+
+
+def _merge_detail_into_listing(listing: list[dict], detail: dict) -> bool:
+    """Merge richer data from a detail-page scholarship into the best title match
+    in *listing*.  Only fills in missing fields; never overwrites existing data.
+    Returns True when a match with similarity >= 0.4 was found.
+    """
+    detail_title = (detail.get('title') or '').strip()
+    if not detail_title or not listing:
+        return False
+    best_idx, best_score = max(
+        ((i, _title_similarity(s.get('title', ''), detail_title))
+         for i, s in enumerate(listing)),
+        key=lambda x: x[1],
+    )
+    if best_score < 0.4:
+        return False
+    t = listing[best_idx]
+    if not t.get('amount') and detail.get('amount'):
+        t['amount'] = detail['amount']
+    if not t.get('benefits_text') and detail.get('benefits_text'):
+        t['benefits_text'] = detail['benefits_text']
+    if not t.get('deadline') and detail.get('deadline'):
+        t['deadline'] = detail['deadline']
+    if len(detail.get('eligibility_criteria') or []) > len(t.get('eligibility_criteria') or []):
+        t['eligibility_criteria'] = detail['eligibility_criteria']
+    if detail.get('description') and \
+            len(detail.get('description', '')) > len(t.get('description', '')):
+        t['description'] = detail['description']
+    return True
 
 
 # ── DB helpers ───────────────────────────────────────────────────────────────
@@ -1003,6 +1109,25 @@ def do_from_urls(urls: list[str], prompt_path: str, insert: bool = True) -> list
                 logging.exception('Claude extraction failed for: %s', url)
                 continue
 
+            # Listing page: try to enrich each entry from its individual detail page
+            if len(scholarships) > 1:
+                detail_links = extract_detail_links(html_bytes, url)
+                if detail_links:
+                    logging.info(
+                        '  Listing page (%d scholarships) — following %d detail link(s)',
+                        len(scholarships), len(detail_links),
+                    )
+                    for dlink in detail_links:
+                        try:
+                            dhtml = fetch_url(dlink)
+                            dresp = call_claude(extract_main_text(dhtml), dlink, prompt_path)
+                            for ds in dresp.get('scholarships', []):
+                                if _merge_detail_into_listing(scholarships, ds):
+                                    logging.info('    Merged detail: %s', dlink)
+                            time.sleep(0.3)
+                        except Exception:
+                            logging.warning('    Detail fetch failed: %s', dlink)
+
         for s in scholarships:
             s.setdefault('application_url', url)
         all_scholarships.extend(scholarships)
@@ -1083,11 +1208,37 @@ def _replace_criteria(conn, scholarship_id: int, criteria_list: list,
     ).scalar()
     old_count = int(old_count_row or 0)
 
-    if old_count > 0 and len(criteria_list) < old_count:
+    # Regression guard: pre-validate the incoming list to get a realistic count of
+    # criteria that will actually insert successfully.  This prevents a scenario where
+    # the raw list is larger than old_count but several fail key-validation, causing
+    # the net inserted count to fall below the old count after the DELETE.
+    from criteria_utils import (normalize_criteria_type, normalize_criteria_key,
+                                normalize_criteria_value, validate_criteria_key)
+    valid_count = 0
+    seen_pre: set[tuple] = set()
+    for c in expand_compound_criteria(criteria_list):
+        try:
+            ctype = normalize_criteria_type(c.get('criteria_type'),
+                                            scholarship_id=scholarship_id,
+                                            source_url=source_url, criteria=c)
+            ckey  = normalize_criteria_key(c.get('criteria_key')) or \
+                    normalize_criteria_key(ctype)
+            if not validate_criteria_key(ctype, ckey):
+                continue
+            cval      = normalize_criteria_value(ctype, ckey,
+                            str(c.get('required_value', '')).strip())
+            dedup_key = (ctype, ckey, cval)
+            if dedup_key not in seen_pre:
+                seen_pre.add(dedup_key)
+                valid_count += 1
+        except Exception:
+            pass
+
+    if old_count > 0 and valid_count < old_count:
         logging.warning(
             '  Regression guard: keeping existing %d criteria for scholarship %d '
-            '(new extraction only produced %d)',
-            old_count, scholarship_id, len(criteria_list),
+            '(new extraction would yield only %d valid)',
+            old_count, scholarship_id, valid_count,
         )
         return -1, 0   # sentinel: caller knows replacement was skipped
 
@@ -1280,7 +1431,18 @@ def do_rescrape(
                 failed += 1
                 continue
             if 'scholarships' in response and response['scholarships']:
-                extracted = response['scholarships'][0]
+                schols = response['scholarships']
+                if len(schols) > 1:
+                    # Listing page — pick the scholarship best matching this DB record
+                    best = max(schols,
+                               key=lambda s: _title_similarity(row.title, s.get('title', '')))
+                    sim = _title_similarity(row.title, best.get('title', ''))
+                    extracted = best if sim >= 0.35 else schols[0]
+                    if len(schols) > 1:
+                        logging.info('  Listing page (%d entries) — matched "%s" (sim=%.2f)',
+                                     len(schols), best.get('title', '')[:50], sim)
+                else:
+                    extracted = schols[0]
             else:
                 extracted = response
             eligibility_raw = extracted.get('eligibility_raw_text', '')

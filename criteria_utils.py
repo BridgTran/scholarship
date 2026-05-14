@@ -23,14 +23,17 @@ ALLOWED_KEYS: dict = {
     'demographic':     {'citizenship', 'residency_status', 'nationality', 'origin_region',
                         'gender', 'age', 'background', 'indigenous_status',
                         # Cross-type keys Claude sometimes sends under demographic:
-                        'employment_status', 'home_state', 'study_country'},
+                        'employment_status', 'home_state', 'study_country',
+                        'year_of_study', 'degree_level', 'enrollment_status'},
     'location':        {'study_state', 'study_country', 'home_state', 'citizenship', 'residency_status'},
     'financial_need':  {'income_threshold', 'means_tested'},
     'extracurricular': {'community_involvement', 'leadership', 'sport'},
     'other':           {'visa_status', 'disability', 'employment_status', 'institution',
                         'study_load', 'fee_status', 'enrollment_status',
                         'ineligible_condition_excluded', 'ineligible_program_excluded',
-                        'prior_education', 'gaokao_completion_timeframe'},
+                        'prior_education', 'gaokao_completion_timeframe',
+                        # Cross-type keys Claude sometimes sends under other:
+                        'year_of_study', 'degree_level', 'citizenship', 'residency_status'},
 }
 
 YEAR_OF_STUDY_VALUE_MAP: dict = {
