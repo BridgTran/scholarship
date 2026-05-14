@@ -461,21 +461,23 @@
             };
             return mapping[value] || value;
           }
-          if (criteriaType === 'academic_level' && ['year', 'year_of_study', 'study_year'].includes(baseKey)) {
+          if (['year', 'year_of_study', 'study_year'].includes(baseKey)) {
             const mapping = {
-              YEAR_1:       '1st Year',
-              YEAR_2:       '2nd Year',
-              YEAR_3:       '3rd Year',
-              YEAR_4:       '4th Year',
-              FINAL_YEAR:   'Final Year',
-              FIRST_YEAR:   '1st Year',
-              SECOND_YEAR:  '2nd Year',
-              THIRD_YEAR:   '3rd Year',
-              FOURTH_YEAR:  '4th Year',
-              '1ST_YEAR':   '1st Year',
-              '2ND_YEAR':   '2nd Year',
-              '3RD_YEAR':   '3rd Year',
-              '4TH_YEAR':   '4th Year',
+              YEAR_1:             '1st Year',
+              YEAR_2:             '2nd Year',
+              YEAR_3:             '3rd Year',
+              YEAR_4:             '4th Year',
+              FINAL_YEAR:         'Final Year',
+              FIRST_YEAR:         '1st Year',
+              SECOND_YEAR:        '2nd Year',
+              THIRD_YEAR:         '3rd Year',
+              FOURTH_YEAR:        '4th Year',
+              '1ST_YEAR':         '1st Year',
+              '2ND_YEAR':         '2nd Year',
+              '3RD_YEAR':         '3rd Year',
+              '4TH_YEAR':         '4th Year',
+              commencing_year_12: 'Year 12 entry (commencing)',
+              final_year_2025:    'Final Year',
             };
             if (mapping[value]) return mapping[value];
             if (/^\d+$/.test(value)) return `Year ${value}`;
@@ -595,6 +597,10 @@
               FINANCIALLY_DISADVANTAGED: 'Financially Disadvantaged',
               LOW_SES:                 'Low Socioeconomic Status',
               LOW_SES_BACKGROUND:      'Low Socioeconomic Background',
+              low_SES_background:      'Low socioeconomic background',
+              low_ses:                 'Low socioeconomic status',
+              low_income:              'Low income',
+              ses_background:          'Socioeconomic background',
             };
             return mapping[value] || value;
           }
