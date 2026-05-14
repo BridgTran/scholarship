@@ -640,7 +640,6 @@
           const baseKey    = isExcluded
             ? criteriaKey.replace(/_(excluded|exclusion)$/, '')
             : criteriaKey;
-          const formatted  = formatCriteriaValue(criteriaType, baseKey, rawValue);
           const label      = formatCriteriaLabel(criteriaType, baseKey);
           const target     = isExcluded ? excludedMap : includedMap;
 
@@ -648,7 +647,13 @@
             target.set(baseKey, { label, criteriaType, values: [] });
           }
           const group = target.get(baseKey);
-          if (!group.values.includes(formatted)) group.values.push(formatted);
+          // Split pipe-separated stored values (e.g. "3RD_YEAR | 4TH_YEAR") and
+          // map each token individually so combined strings display correctly.
+          const tokens = rawValue.includes(' | ') ? rawValue.split(' | ') : [rawValue];
+          tokens.forEach(token => {
+            const formatted = formatCriteriaValue(criteriaType, baseKey, token.trim());
+            if (!group.values.includes(formatted)) group.values.push(formatted);
+          });
         });
 
         // ── Step 2: Deduplicate level / degree_level if values are identical ──
