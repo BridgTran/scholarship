@@ -423,6 +423,16 @@
             employment_status:   'Employment status',
             indigenous_status:   'Indigenous status',
             background:          'Background',
+            age:                 'Age',
+            discipline:          'Field of study',
+            major:               'Major',
+            university:          'University',
+            program_type:        'Program type',
+            new_student:         'New student status',
+            no_deferral:         'Deferral restriction',
+            membership:          'Membership',
+            refugee_status:      'Refugee status',
+            raw_text:            'Additional requirement',
           };
           return KEY_LABELS[baseKey] || String(baseKey || criteriaType || '').replace(/_/g, ' ');
         }
@@ -596,6 +606,11 @@
               ONLINE_DEGREE: 'Online Degree',
             };
             return mapping[value] || value;
+          }
+
+          // ── Raw text: snake_case identifiers → Title Case ─────────────────
+          if (baseKey === 'raw_text' && /^[a-z][a-z0-9_]+$/.test(value)) {
+            return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
           }
 
           return value;
