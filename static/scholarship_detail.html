@@ -806,7 +806,7 @@
         }
 
         // — Institution: one row per institution (not joined)
-        const institutionGroup = consume('institution');
+        const institutionGroup = consume('institution') || consume('university');
         if (institutionGroup) {
           institutionGroup.values.forEach(v => addReq(`At ${v}`, '🏛️'));
         }

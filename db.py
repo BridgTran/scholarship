@@ -6,7 +6,9 @@ from sqlalchemy import create_engine, text
 load_dotenv()
 
 # Database configuration
-DATABASE_URL = os.getenv('DATABASE_URL', 'mysql+pymysql://root:@localhost/scholarshipapp')
+DATABASE_URL = os.getenv('DATABASE_URL')
+if not DATABASE_URL:
+    raise RuntimeError('DATABASE_URL environment variable is not set')
 
 # Create engine
 engine = create_engine(
